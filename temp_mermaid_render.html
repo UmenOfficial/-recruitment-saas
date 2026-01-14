@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Machine Diagram</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: white; }
+    </style>
+</head>
+<body>
+    <pre class="mermaid">
+stateDiagram-v2
+    [*] --> CHECK: User Enters Test Room
+    
+    state "System Check" as CHECK {
+        [*] --> CheckPermissions: Verify Cam/Mic
+        CheckPermissions --> CheckNetwork: Ping Speed Test
+        CheckNetwork --> Ready: All Pass
+    }
+
+    CHECK --> TUTORIAL: Click "Start Practice"
+    
+    state "Tutorial Mode" as TUTORIAL {
+        [*] --> PracticeQuestion
+        PracticeQuestion --> Familiarized: User Interacts
+    }
+
+    TUTORIAL --> APTITUDE: Start Real Test (Timer Commands)
+    
+    state "Aptitude Test (Timed)" as APTITUDE {
+        [*] --> Q1
+        Q1 --> Q2: Answer Saved
+        Q2 --> ...
+        ... --> TimeExpired: Server Timer = 0
+        ... --> FinishSection: User Finishes
+    }
+
+    APTITUDE --> INTERMISSION: Section Complete
+    
+    state "Intermission" as INTERMISSION {
+        [*] --> Waiting
+        Waiting --> NextSection: 60s Countdown or Button
+    }
+
+    INTERMISSION --> PERSONALITY: Start Survey
+
+    state "Personality Test (Untimed)" as PERSONALITY {
+        [*] --> SurveyPages
+        SurveyPages --> Review
+    }
+
+    PERSONALITY --> SUBMIT: Final Submit
+
+    state "Submission Logic" as SUBMIT {
+        [*] --> UploadVideos: Chunk Upload Pending?
+        UploadVideos --> SaveAnswers: Sync Final Data
+        SaveAnswers --> Complete
+        UploadVideos --> RetryModal: Failure (Do Not Close)
+        RetryModal --> UploadVideos: User Retries
+    }
+
+    SUBMIT --> [*]: Redirect to Dashboard
+    </pre>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# [필수] Supabase 설정 (Project Settings -> API 메뉴에서 확인 가능)
+NEXT_PUBLIC_SUPABASE_URL=put_your_supabase_url_here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=put_your_supabase_anon_key_here
+
+# [필수] 암호화 키 (시스템에서 자동 생성한 값, 그대로 사용하셔도 됩니다)
+# PIPA 법률 준수를 위해 민감정보(전화번호 등) 암호화에 사용됩니다.
+ENCRYPTION_KEY=2aeaff927ae5b5daa2961a45c4d952b979dfb4d6a49b867dd99be22746caa75a
+
+# [선택] 이메일 알림 및 Cron 보안 설정
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+CRON_SECRET=
