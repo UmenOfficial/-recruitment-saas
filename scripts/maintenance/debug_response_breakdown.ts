@@ -8,7 +8,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function inspectResponses() {
-    const email = 'paycmh@gmail.com';
+    const email = 'test_user@umen.cloud';
     const targets = ['회복성', '경계선 성격장애'];
 
     console.log(`Inspecting responses for: ${targets.join(', ')} - User: ${email}`);

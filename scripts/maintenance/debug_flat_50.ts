@@ -12,7 +12,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function inspectUserResult() {
-    const email = 'paycmh@gmail.com';
+    const email = 'test_user@umen.cloud';
     console.log(`Finding user: ${email}`);
 
     const { data: user, error: userError } = await supabase

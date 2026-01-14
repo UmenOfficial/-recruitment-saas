@@ -84,24 +84,45 @@ export async function middleware(req: NextRequest) {
   }
 
   // 1.5 Admin Authentication Guard
-  if (req.nextUrl.pathname.startsWith('/admin') && !req.nextUrl.pathname.startsWith('/admin/login')) {
-    if (!session) {
+  if (req.nextUrl.pathname.startsWith('/admin')) {
+
+    // [Invisible Cloak] Scecret Key Verification
+    const ADMIN_SECRET_KEY = 'umen_master_key_2026'; // Defined Secret Key
+    const hasSecretCookie = req.cookies.get('admin_hide_pass')?.value === 'true';
+    const hasSecretParam = req.nextUrl.searchParams.get('secret') === ADMIN_SECRET_KEY;
+
+    if (!hasSecretCookie && !hasSecretParam) {
+      // If neither cookie nor param exists, redirect to Home (Hidden mode)
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+
+    // If param is correct but cookie is missing, set cookie and redirect to clean URL
+    if (hasSecretParam && !hasSecretCookie) {
+      const response = NextResponse.redirect(new URL('/admin/login', req.url));
+      response.cookies.set('admin_hide_pass', 'true', { httpOnly: true, path: '/' });
+      return response;
+    }
+
+    // Standard Auth Check
+    if (!session && !req.nextUrl.pathname.startsWith('/admin/login')) {
       const redirectUrl = req.nextUrl.clone();
       redirectUrl.pathname = '/admin/login';
       redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Role Check
-    const { data: userRole } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
+    // Role Check (Only if session exists)
+    if (session) {
+      const { data: userRole } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
 
-    if (!userRole || (userRole.role !== 'SUPER_ADMIN' && userRole.role !== 'ADMIN')) {
-      console.warn(`[Security] Unauthorized access attempt to ${req.nextUrl.pathname} by ${session.user.id} (Role: ${userRole?.role})`);
-      return NextResponse.redirect(new URL('/', req.url));
+      if (!userRole || (userRole.role !== 'SUPER_ADMIN' && userRole.role !== 'ADMIN')) {
+        console.warn(`[Security] Unauthorized access attempt to ${req.nextUrl.pathname} by ${session.user.id} (Role: ${userRole?.role})`);
+        return NextResponse.redirect(new URL('/', req.url));
+      }
     }
   }
 

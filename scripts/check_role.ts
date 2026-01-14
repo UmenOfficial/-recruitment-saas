@@ -63,6 +63,6 @@ async function checkUser(email: string) {
     }
 }
 
-checkUser('prodaum6660@gmail.com').then(() => {
+checkUser('admin@umen.cloud').then(() => {
     console.log("Done.");
 }).catch(e => console.error(e));

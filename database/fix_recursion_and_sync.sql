@@ -34,7 +34,7 @@ CREATE POLICY "Corp Admin manage members" ON company_members
 INSERT INTO public.users (id, email, role, full_name)
 SELECT id, email, 'SUPER_ADMIN', 'Super Admin User'
 FROM auth.users
-WHERE email = 'prodaum6660@gmail.com'
+WHERE email = 'admin@umen.cloud'
 ON CONFLICT (id) DO UPDATE 
 SET role = 'SUPER_ADMIN'; -- Force ensure Super Admin role
 

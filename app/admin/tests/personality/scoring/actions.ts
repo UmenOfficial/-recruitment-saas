@@ -14,6 +14,27 @@ export async function fetchTestResultsForNorms(targetTestId: string, sourceTestI
         throw new Error('Supabase environment details missing for Service Role');
     }
 
+    // [Security Fix] Authenticate User & Verify Role
+    // Since this action uses Service Role (Bypass RLS), we MUST verify the caller is an Admin.
+    const { createServerSupabaseClient } = await import('@/lib/supabase-server');
+    const authClient = await createServerSupabaseClient();
+    const { data: { session } } = await authClient.auth.getSession();
+
+    if (!session) {
+        throw new Error('Unauthorized: No active session');
+    }
+
+    // Check Role
+    const { data: userRole } = await (authClient
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single() as any);
+
+    if (!userRole || (userRole.role !== 'SUPER_ADMIN' && userRole.role !== 'ADMIN')) {
+        throw new Error('Forbidden: Insufficient permissions');
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     try {
@@ -265,6 +286,25 @@ export async function fetchTestsAction() {
     if (!supabaseUrl || !supabaseServiceKey) {
         console.error("Missing Env Vars:", { url: !!supabaseUrl, key: !!supabaseServiceKey });
         throw new Error('Supabase environment details missing for Service Role');
+    }
+
+    // [Security Fix] Authenticate User & Verify Role
+    const { createServerSupabaseClient } = await import('@/lib/supabase-server');
+    const authClient = await createServerSupabaseClient();
+    const { data: { session } } = await authClient.auth.getSession();
+
+    if (!session) {
+        throw new Error('Unauthorized: No active session');
+    }
+
+    const { data: userRole } = await (authClient
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single() as any);
+
+    if (!userRole || (userRole.role !== 'SUPER_ADMIN' && userRole.role !== 'ADMIN')) {
+        throw new Error('Forbidden: Insufficient permissions');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

@@ -1,2 +1,2 @@
--- Verify user role for prodaum6660@gmail.com
-SELECT * FROM users WHERE email = 'prodaum6660@gmail.com';
+-- Verify user role for admin@umen.cloud
+SELECT * FROM users WHERE email = 'admin@umen.cloud';

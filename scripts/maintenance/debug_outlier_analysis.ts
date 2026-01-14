@@ -8,7 +8,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function analyzeOutliers() {
-    const email = 'paycmh@gmail.com';
+    const email = 'test_user@umen.cloud';
     const { data: user } = await supabase.from('users').select('id').eq('email', email).single();
     if (!user) return console.log('User not found');
 

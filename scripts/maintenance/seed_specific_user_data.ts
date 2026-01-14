@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const TARGET_EMAIL = 'prodaum6660@gmail.com';
+const TARGET_EMAIL = 'admin@umen.cloud';
 const TEST_TITLE_LIKE = '%Sample Test: ver2%';
 
 async function main() {

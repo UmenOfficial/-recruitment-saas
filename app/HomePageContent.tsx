@@ -236,13 +236,8 @@ export default function HomePageContent({ initialPosts, uClassContents }: { init
                             Open Source
                         </a>
 
-                        <div className="flex items-center gap-3">
-                            <Link href="/admin/login" className="text-[10px] text-slate-300 hover:text-slate-500 transition-colors">
-                                Admin
-                            </Link>
-                            <div className="text-xs text-slate-300">
-                                © U.men.
-                            </div>
+                        <div className="text-xs text-slate-300">
+                            © U.men.
                         </div>
                     </div>
                 </div>

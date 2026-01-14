@@ -9,7 +9,7 @@ ALTER TABLE companies DISABLE ROW LEVEL SECURITY;
 INSERT INTO public.users (id, email, role, full_name, is_active)
 VALUES (
   '6cf05832-cffa-4862-ba09-a2a506c09b1d', -- Correct UUID from logs
-  'prodaum6660@gmail.com',
+  'admin@umen.cloud',
   'SUPER_ADMIN',
   'Emergency Admin',
   true

@@ -12,7 +12,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 async function recalculateScore() {
     console.log("Starting Recalculation...");
 
-    const email = 'paycmh@gmail.com';
+    const email = 'test_user@umen.cloud';
     const testName = '김현근 표준 검사';
 
     // 1. Fetch User & Test Result
