@@ -123,6 +123,11 @@ export async function middleware(req: NextRequest) {
         console.warn(`[Security] Unauthorized access attempt to ${req.nextUrl.pathname} by ${session.user.id} (Role: ${userRole?.role})`);
         return NextResponse.redirect(new URL('/', req.url));
       }
+
+      // Force Redirect /admin -> /admin/dashboard
+      if (req.nextUrl.pathname === '/admin') {
+        return NextResponse.redirect(new URL('/admin/dashboard', req.url));
+      }
     }
   }
 
