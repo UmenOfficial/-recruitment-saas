@@ -31,7 +31,7 @@ export async function fetchPosts(category?: string) {
     }
 
     // Map comment count
-    return data.map((post: any) => ({
+    return (data as any[]).map((post: any) => ({
         ...post,
         comment_count: post.comments?.[0]?.count || 0
     }));
@@ -56,11 +56,12 @@ export async function fetchPostDetail(id: string) {
     if (error) return null;
 
     // Sort comments by created_at desc
-    if (post.comments) {
-        post.comments.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const safePost = post as any;
+    if (safePost.comments) {
+        safePost.comments.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
-    return post;
+    return safePost;
 }
 
 export async function addComment(postId: string, content: string) {
@@ -81,6 +82,7 @@ export async function addComment(postId: string, content: string) {
     if (postError || !post) {
         return { success: false, error: '게시글을 찾을 수 없습니다.' };
     }
+    const safePost = post as any;
 
     // Permission Logic
     const { data: userRole } = await supabase
@@ -89,10 +91,11 @@ export async function addComment(postId: string, content: string) {
         .eq('id', session.user.id)
         .single();
 
-    const isAdmin = userRole?.role === 'SUPER_ADMIN' || userRole?.role === 'ADMIN';
+    const safeUserRole = userRole as any;
+    const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' || safeUserRole?.role === 'ADMIN';
 
     // Secret Post Logic (QNA)
-    const isSecret = post.category === 'QNA';
+    const isSecret = safePost.category === 'QNA';
 
     if (isSecret) {
         // Only Admin can comment on Secret Posts
