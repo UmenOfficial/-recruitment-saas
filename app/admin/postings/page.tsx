@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Plus, Briefcase, Calendar, MoreHorizontal, Loader2 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 

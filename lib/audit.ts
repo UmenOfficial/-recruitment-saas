@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 // PIPA Requirement: Log who accessed what, when, and from where.
 // Usage: await logAuditEvent(userId, 'VIEW_CANDIDATE', candidateId, ipAddress);

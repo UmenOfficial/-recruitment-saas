@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 export const dynamic = 'force-dynamic';
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Users, FileText, Briefcase, TrendingUp, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';

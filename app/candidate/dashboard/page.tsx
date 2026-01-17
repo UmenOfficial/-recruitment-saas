@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Award, Calendar, ChevronRight, FileText, LayoutGrid, CheckCircle2, RefreshCw, TrendingUp } from "lucide-react";
@@ -16,7 +16,7 @@ function calculatePercentile(tScore: number) {
 }
 
 export default async function CandidateDashboard() {
-    const supabase = await createClient();
+    const supabase = await createServerSupabaseClient();
 
     const {
         data: { session },

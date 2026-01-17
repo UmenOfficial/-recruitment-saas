@@ -70,6 +70,25 @@
 
 ---
 
+## ⚙️ 환경 변수 설정 (Environment Setup)
+
+프로젝트 실행을 위해 루트 디렉토리에 `.env.local` 파일을 생성하고 아래 변수들을 설정해야 합니다.
+
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Service Options
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Security (Important)
+# 미들웨어 우회를 방지하기 위한 관리자 비밀 키입니다.
+ADMIN_SECRET_KEY=your_secure_random_string_here
+```
+
+---
+
 ## 📂 프로젝트 구조 (Project Structure)
 
 ```
@@ -85,7 +104,7 @@
 │   ├── common/            # 공통 컴포넌트 (Button, Modal, Logo...)
 │   └── layout/            # 레이아웃 컴포넌트 (Header, Footer...)
 ├── lib/                    # 유틸리티 및 라이브러리 설정
-│   └── supabase/          # Supabase Client 설정 (Client/Server)
+│   └── supabase/          # Supabase Client 설정 (global-client, server)
 ├── scripts/                # 유지보수 및 데이터 마이그레이션 스크립트
 ├── types/                  # TypeScript 타입 정의
 └── database/               # SQL 스키마 및 마이그레이션 파일
@@ -95,3 +114,15 @@
 
 ## 📝 라이선스 및 저작권
 Copyright © 2025 U.men. All rights reserved.
+
+## 🧠 Personality Scoring System (CRITICAL)
+
+The personality test scoring logic follows a strict **Two-Layer Norm Architecture** (Global Scales / Local Competencies).
+This logic is statistically sensitive and **MUST NOT be modified** without understanding the core principles.
+
+👉 **[Read the Full Documentation (docs/NORMS_AND_SCORING.md)](./docs/NORMS_AND_SCORING.md)**
+
+**Key Rules:**
+1. **Global Scale Norms** are shared across ALL tests.
+2. **Competency Norms** are distinct per test and use specific Standard Deviations based on scale correlations.
+3. Scoring Logic implementation is protected in `lib/scoring.ts`.

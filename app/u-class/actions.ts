@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export type Comment = {
@@ -19,7 +19,7 @@ export type Comment = {
 };
 
 export async function getComments(contentId: string): Promise<Comment[]> {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user: currentUser } } = await (await supabase).auth.getUser();
 
     // 1. Fetch user role first to check if ADMIN
@@ -120,7 +120,7 @@ export async function createComment(
     isSecret: boolean,
     parentId: string | null = null
 ) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await (await supabase).auth.getUser();
 
     if (!user) {
@@ -146,7 +146,7 @@ export async function createComment(
 }
 
 export async function deleteComment(commentId: string, contentId: string) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await (await supabase).auth.getUser();
 
     if (!user) {

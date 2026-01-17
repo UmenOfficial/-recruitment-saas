@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTestStore } from '@/lib/store/test-session';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Loader2, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
 import TestTimer from '@/components/test/TestTimer';
 import AntiCheatGuard from '@/components/test/AntiCheatGuard';

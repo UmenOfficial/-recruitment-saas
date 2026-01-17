@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Search, User, FileText, ChevronRight, Settings, RotateCcw, Trash2, AlertTriangle } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { Badge } from "@/components/ui/badge";

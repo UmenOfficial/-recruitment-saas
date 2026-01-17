@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase/global-client';
 
 async function checkBuckets() {
     console.log("Checking buckets...");

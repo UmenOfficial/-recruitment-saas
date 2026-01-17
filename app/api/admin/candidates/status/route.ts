@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email';
 import { maskData } from '@/lib/encryption'; // Just to show we care about security even here (logging maybe)
 

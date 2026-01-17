@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, use, useRef, useCallback } from "react";
 import { ArrowLeft, ArrowRight, Check, Clock, AlertTriangle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/global-client";
 import { toast } from "sonner";
 import { calculatePersonalityScores } from "@/lib/scoring";
 import { useRouter } from "next/navigation";

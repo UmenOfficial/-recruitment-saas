@@ -87,7 +87,7 @@ export async function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith('/admin')) {
 
     // [Invisible Cloak] Scecret Key Verification
-    const ADMIN_SECRET_KEY = 'umen_master_key_2026'; // Defined Secret Key
+    const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'umen_master_key_2026'; // Fallback for dev, but strictly use ENV in prod
     const hasSecretCookie = req.cookies.get('admin_hide_pass')?.value === 'true';
     const hasSecretParam = req.nextUrl.searchParams.get('secret') === ADMIN_SECRET_KEY;
 

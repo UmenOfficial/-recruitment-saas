@@ -4,7 +4,7 @@ import { useDropzone } from "react-dropzone";
 import { UploadCloud, File, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/global-client";
 import { useState } from "react";
 import { toast } from "sonner";
 

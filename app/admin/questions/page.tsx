@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Plus, Trash2, Search, FileText, FileSpreadsheet } from 'lucide-react';
 import ExcelUpload from '@/components/admin/ExcelUpload';
 import QuestionModal from '@/components/admin/QuestionModal';

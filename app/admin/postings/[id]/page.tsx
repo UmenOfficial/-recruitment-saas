@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { ArrowLeft, Save, Loader2, Link as LinkIcon, Trash2, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { toast, Toaster } from 'sonner';

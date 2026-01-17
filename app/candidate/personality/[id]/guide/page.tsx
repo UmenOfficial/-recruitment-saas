@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function PersonalityGuidePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;

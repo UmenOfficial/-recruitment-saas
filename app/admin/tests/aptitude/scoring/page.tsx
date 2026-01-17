@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Save, AlertCircle, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 

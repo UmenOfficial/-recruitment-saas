@@ -1,15 +1,15 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function getUserSession() {
-    const supabase = await createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
     return session;
 }
 
 export async function fetchPosts(category?: string) {
-    const supabase = await createClient();
+    const supabase = await createServerSupabaseClient();
 
     let query = supabase
         .from('posts')
@@ -38,7 +38,7 @@ export async function fetchPosts(category?: string) {
 }
 
 export async function fetchPostDetail(id: string) {
-    const supabase = await createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Increment View Count (Skip for now as it requires RPC or RLS bypass)
 

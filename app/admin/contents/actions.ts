@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export type AdminContent = {
@@ -16,7 +16,7 @@ export type AdminContent = {
 };
 
 export async function getContents() {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await (await supabase)
         .from('admin_contents')
         .select('*')
@@ -31,7 +31,7 @@ export async function getContents() {
 }
 
 export async function getPublishedContents() {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await (await supabase)
         .from('admin_contents')
         .select('*')
@@ -47,7 +47,7 @@ export async function getPublishedContents() {
 }
 
 export async function createContent(formData: FormData) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     const title = formData.get('title') as string;
     const type = formData.get('type') as 'VIDEO' | 'ARTICLE';
@@ -109,7 +109,7 @@ export async function createContent(formData: FormData) {
 }
 
 export async function updateContent(id: string, formData: FormData) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     const title = formData.get('title') as string;
     const type = formData.get('type') as 'VIDEO' | 'ARTICLE';
@@ -176,7 +176,7 @@ export async function updateContent(id: string, formData: FormData) {
 }
 
 export async function deleteContent(id: string) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     const { error } = await (await supabase)
         .from('admin_contents')
@@ -193,7 +193,7 @@ export async function deleteContent(id: string) {
 }
 
 export async function togglePublish(id: string, currentStatus: boolean) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     const { error } = await (await supabase)
         .from('admin_contents')
@@ -210,7 +210,7 @@ export async function togglePublish(id: string, currentStatus: boolean) {
 }
 
 export async function uploadContentImage(formData: FormData): Promise<string> {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const file = formData.get('file') as File;
 
     if (!file) throw new Error('No file uploaded');

@@ -3,66 +3,57 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load env vars
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("Missing Supabase credentials");
-  process.exit(1);
-}
+const GLOBAL_TEST_ID = '8afa34fb-6300-4c5e-bc48-bbdb74c717d8';
+const SPECIFIC_TEST_ID = 'a724bab1-b7e2-4b99-a5a3-8ae47cd9411e'; // Standard Personality Test
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+async function main() {
+  console.log('Checking Norm Distribution...');
 
-async function checkNorms() {
-  console.log("Checking Norms for NIS Customizing Test...");
-
-  // 1. Find the NIS test ID
-  const { data: tests, error: testError } = await supabase
-    .from('tests')
-    .select('id, title')
-    .ilike('title', '%NIS Customizing%')
-    .limit(1);
-
-  if (testError || !tests || tests.length === 0) {
-    console.error("Could not find NIS Customizing Test", testError);
-    return;
-  }
-
-  const testId = tests[0].id;
-  console.log(`Found Test: ${tests[0].title} (${testId})`);
-
-  // 2. Fetch Norms
-  const { data: norms, error: normError } = await supabase
+  // 1. Check Global Norms
+  const { data: globalNorms } = await supabase
     .from('test_norms')
     .select('*')
-    .eq('test_id', testId);
+    .eq('test_id', GLOBAL_TEST_ID);
 
-  if (normError) {
-    console.error("Error fetching norms", normError);
-    return;
+  const globalScales = globalNorms?.filter(n => n.category_name.startsWith('Scale_')).length || 0;
+  const globalComps = globalNorms?.filter(n => !n.category_name.startsWith('Scale_')).length || 0;
+
+  console.log(`\nGlobal ID (${GLOBAL_TEST_ID}):`);
+  console.log(`- Total Norms: ${globalNorms?.length}`);
+  console.log(`- Scale Norms: ${globalScales}`);
+  console.log(`- Comp/Other Norms: ${globalComps}`);
+  if (globalComps > 0) {
+    console.log('  WARNING: Global contains non-Scale norms:', globalNorms?.filter(n => !n.category_name.startsWith('Scale_')).map(n => n.category_name));
+  } else {
+    console.log('\n--- Sample Global Scale Norms (First 5) ---');
+    globalNorms?.filter(n => n.category_name.startsWith('Scale_')).slice(0, 5).forEach(n => {
+      console.log(`- ${n.category_name.replace('Scale_', '')}: Mean=${n.mean_value}, StdDev=${n.std_dev_value}`);
+    });
   }
 
-  console.log(`\nTotal Norms Found: ${norms?.length}`);
+  // 2. Check Specific Test Norms
+  const { data: localNorms } = await supabase
+    .from('test_norms')
+    .select('category_name')
+    .eq('test_id', SPECIFIC_TEST_ID);
 
-  const scaleNorms = norms.filter(n => n.category_name.startsWith('Scale_'));
-  const compNorms = norms.filter(n => n.category_name.startsWith('Comp_'));
+  const localScales = localNorms?.filter(n => n.category_name.startsWith('Scale_')).length || 0;
+  const localComps = localNorms?.filter(n => !n.category_name.startsWith('Scale_')).length || 0;
 
-  console.log(`Scale Norms: ${scaleNorms.length}`);
-  console.log(`Competency Norms: ${compNorms.length}`);
+  console.log(`\nSpecific ID (${SPECIFIC_TEST_ID}):`);
+  console.log(`- Total Norms: ${localNorms?.length}`);
+  console.log(`- Scale Norms: ${localScales}`);
+  console.log(`- Comp/Other Norms: ${localComps}`);
 
-  // 3. Display Sample
-  console.log("\n--- Sample Scale Norms ---");
-  scaleNorms.slice(0, 5).forEach(n => {
-    console.log(`${n.category_name}: Mean=${n.mean_value.toFixed(2)}, StdDev=${n.std_dev_value.toFixed(2)}`);
-  });
-
-  console.log("\n--- All Competency Norms ---");
-  compNorms.forEach(n => {
-    console.log(`${n.category_name}: Mean=${n.mean_value.toFixed(2)}, StdDev=${n.std_dev_value.toFixed(2)}`);
-  });
+  if (localScales > 0) {
+    console.log('  WARNING: Local contains Scale norms (Duplicates?):', localNorms?.filter(n => n.category_name.startsWith('Scale_')).map(n => n.category_name));
+  }
 }
 
-checkNorms();
+main();

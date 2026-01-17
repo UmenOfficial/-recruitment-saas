@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Save, AlertCircle, TrendingUp, Calculator, Calendar, ArrowRight, CheckCircle2, Circle, Clock, ChevronDown, ChevronUp, Check, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchTestResultsForNorms, fetchTestsAction } from './actions';
@@ -281,7 +281,7 @@ export default function PersonalityScoringManagement() {
 
                             if (raw !== undefined && stat) {
                                 // [Refactor] Use shared calculateTScore for consistency and clamping
-                                let t = calculateTScore(raw, stat.mean, stat.std);
+                                const t = calculateTScore(raw, stat.mean, stat.std);
                                 tSum += t;
                             } else {
                                 // Missing scale score or stats -> cannot calc competency
@@ -343,7 +343,7 @@ export default function PersonalityScoringManagement() {
                             const raw = (typeof rawObj === 'number') ? rawObj : rawObj?.raw;
                             const stat = scaleStats[sName];
                             if (raw !== undefined && stat) {
-                                let t = calculateTScore(raw, stat.mean, stat.std);
+                                const t = calculateTScore(raw, stat.mean, stat.std);
                                 tSum += t;
                             } else {
                                 valid = false;
@@ -382,7 +382,7 @@ export default function PersonalityScoringManagement() {
                             const raw = (typeof rawObj === 'number') ? rawObj : rawObj?.raw;
                             const stat = scaleStats[sName];
                             if (raw !== undefined && stat) {
-                                let t = calculateTScore(raw, stat.mean, stat.std);
+                                const t = calculateTScore(raw, stat.mean, stat.std);
                                 scaleTSum += t;
                             }
                         });
@@ -399,7 +399,7 @@ export default function PersonalityScoringManagement() {
                                 const raw = (typeof rawObj === 'number') ? rawObj : rawObj?.raw;
                                 const stat = scaleStats[sName];
                                 if (raw !== undefined && stat) {
-                                    let t = calculateTScore(raw, stat.mean, stat.std);
+                                    const t = calculateTScore(raw, stat.mean, stat.std);
                                     compRaw += t;
                                 } else {
                                     compValid = false;
@@ -408,7 +408,7 @@ export default function PersonalityScoringManagement() {
 
                             if (compValid) {
                                 const cStat = compStats[compName];
-                                let cT = calculateTScore(compRaw, cStat.mean, cStat.std);
+                                const cT = calculateTScore(compRaw, cStat.mean, cStat.std);
                                 totalCompTSum += cT;
                             } else {
                                 validTotal = false;

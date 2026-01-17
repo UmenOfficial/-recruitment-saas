@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import LandingHeader from '@/components/layout/LandingHeader';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
 import Link from 'next/link';
@@ -10,7 +10,7 @@ import { getComments } from '../actions';
 // Generate Metadata
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
     const { id } = await params;
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: post } = await (await supabase)
         .from('admin_contents')
         .select('title, summary')
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
 export default async function UClassDetailPage({ params }: { params: { id: string } }) {
     const { id } = await params;
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Fetch Content
     const { data: post, error } = await (await supabase)

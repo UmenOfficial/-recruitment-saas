@@ -9,7 +9,7 @@ import { Suspense } from 'react';
 import { useState } from 'react';
 
 function LoginPageContent() {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const router = useRouter();
     const searchParams = useSearchParams();
     // Force redirect to home with loggedin flag as per user request

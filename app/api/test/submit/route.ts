@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { calculatePersonalityScores } from '@/lib/scoring';
 
 export async function POST(request: Request) {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
         // 2. Fetch Questions (server-side score calc)
         const { data: questions } = await (supabase
             .from('questions') as any)
-            .select('id, correct_answer, score, category');
+            .select('id, correct_answer, score, category, is_reverse_scored');
 
         if (!questions) throw new Error('Failed to load questions map');
 
@@ -50,7 +50,6 @@ export async function POST(request: Request) {
             // --- PERSONALITY SCORING LOGIC ---
 
 
-            // A. Fetch necessary data: Norms, Competencies
             // A. Fetch necessary data: Global Norms, Local Norms, Competencies
             const GLOBAL_TEST_ID = '8afa34fb-6300-4c5e-bc48-bbdb74c717d8';
 
@@ -66,9 +65,6 @@ export async function POST(request: Request) {
 
             const globalNorms = (globalNormsResult as any).data || [];
             const localNorms = (localNormsResult as any).data || [];
-
-            // Merge: Global for Scales, Local for Competencies/Total
-            const norms = [...globalNorms, ...localNorms];
             const competencies = (competenciesResult as any).data || [];
 
             // B. Prepare Input for Scoring (Map { qId: idx } to { qId: scoreValue })
@@ -78,37 +74,41 @@ export async function POST(request: Request) {
                 const question = questions.find((q: any) => q.id === qId);
                 if (!question) return null;
 
-                // Assumption: selectedIdx is 0-based index. Score = index + 1.
-                const scoreValue = (typeof selectedIdx === 'number' ? selectedIdx : parseInt(selectedIdx as string)) + 1;
+                // Assumption: selectedIdx is 0-based index. 
+                // Raw Value = index + 1 (1-5 scale)
+                let rawValue = (typeof selectedIdx === 'number' ? selectedIdx : parseInt(selectedIdx as string)) + 1;
 
-                answersMap[qId] = scoreValue;
+                // Apply Reverse Scoring
+                if ((question as any).is_reverse_scored) {
+                    rawValue = 6 - rawValue;
+                }
+
+                answersMap[qId] = rawValue;
 
                 return {
                     question_id: qId,
                     selected_option: selectedIdx,
-                    score: scoreValue,
+                    score: rawValue,
                     category: (question as any).category // Use category from question
                 };
             }).filter(Boolean);
 
             // C. Calculate Scores using Shared Lib
-            // Need to map questions to { id, category } interface
             const questionList = questions.map((q: any) => ({
                 id: q.id,
                 category: q.category
             }));
 
-            // Need to map competencies
             const compList = competencies.map((c: any) => ({
                 name: c.name,
                 competency_scales: c.competency_scales
             }));
 
-            // Split norms into Scale vs Competency based on prefixes
-            // Scale Norms: 'Scale_{name}'
-            // Comp Norms: 'Comp_{name}' or 'Comp_TOTAL'
+            // Split norms strictly:
+            // Scale Norms: FROM GLOBAL ONLY
+            // Comp Norms: FROM LOCAL ONLY
 
-            const scaleNorms = norms
+            const scaleNorms = globalNorms
                 .filter((n: any) => n.category_name.startsWith('Scale_'))
                 .map((n: any) => ({
                     category_name: n.category_name.replace('Scale_', ''),
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
                     std_dev_value: n.std_dev_value
                 }));
 
-            const competencyNorms = norms
+            const competencyNorms = localNorms
                 .filter((n: any) => !n.category_name.startsWith('Scale_'))
                 .map((n: any) => ({
                     category_name: n.category_name.replace('Comp_', ''),
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
         // 4. Insert Test Result
         const finalLog = {
             answers: scoredAnswers,
-            scoring_breakdown: detailScores
+            scoring_breakdown: detailScores // Legacy field in log, keep for debug
         };
 
         const { error: resultError } = await (supabase
@@ -173,9 +173,10 @@ export async function POST(request: Request) {
                 application_id: application_id,
                 total_score: totalScore,
                 max_score: maxScore,
-                answers_log: finalLog as any, // Cast to any to fit Json type
+                answers_log: finalLog as any,
                 completed_at: new Date().toISOString(),
-                test_id: testId
+                test_id: testId,
+                detailed_scores: detailScores // Save properly to column
             });
 
         if (resultError) throw resultError;

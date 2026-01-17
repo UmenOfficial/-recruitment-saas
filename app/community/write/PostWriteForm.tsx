@@ -42,7 +42,7 @@ export default function PostWriteForm() {
             const imageUrls: string[] = [];
             if (images.length > 0) {
                 setUploading(true);
-                const supabase = createClient();
+                const supabase = await createServerSupabaseClient();
 
                 for (const file of images) {
                     const ext = file.name.split('.').pop();

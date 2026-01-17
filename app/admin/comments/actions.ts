@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export type AdminCommentItem = {
     id: string;
@@ -29,7 +29,7 @@ export type AdminPostItem = {
 };
 
 export async function getAllCommentsForAdmin(): Promise<AdminCommentItem[]> {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Check Admin
     const { data: { user } } = await (await supabase).auth.getUser();
@@ -77,7 +77,7 @@ export async function getAllCommentsForAdmin(): Promise<AdminCommentItem[]> {
 }
 
 export async function getAllPostsForAdmin(): Promise<AdminPostItem[]> {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Check Admin (using session client)
     const { data: { user } } = await (await supabase).auth.getUser();
@@ -146,7 +146,7 @@ export async function getAllPostsForAdmin(): Promise<AdminPostItem[]> {
 }
 
 export async function deletePost(id: string) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Check Admin
     const { data: { user } } = await (await supabase).auth.getUser();

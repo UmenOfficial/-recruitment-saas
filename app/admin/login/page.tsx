@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 /**
  * 관리자 로그인 페이지
@@ -45,7 +45,7 @@ export default function AdminLoginPage() {
 
     return (
         <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
-            <Toaster position="top-right" />
+
 
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
                 <div className="p-8 text-center bg-slate-50 border-b">

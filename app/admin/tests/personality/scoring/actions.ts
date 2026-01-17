@@ -16,7 +16,7 @@ export async function fetchTestResultsForNorms(targetTestId: string, sourceTestI
 
     // [Security Fix] Authenticate User & Verify Role
     // Since this action uses Service Role (Bypass RLS), we MUST verify the caller is an Admin.
-    const { createServerSupabaseClient } = await import('@/lib/supabase-server');
+    const { createServerSupabaseClient } = await import('@/lib/supabase/server');
     const authClient = await createServerSupabaseClient();
     const { data: { session } } = await authClient.auth.getSession();
 
@@ -289,7 +289,7 @@ export async function fetchTestsAction() {
     }
 
     // [Security Fix] Authenticate User & Verify Role
-    const { createServerSupabaseClient } = await import('@/lib/supabase-server');
+    const { createServerSupabaseClient } = await import('@/lib/supabase/server');
     const authClient = await createServerSupabaseClient();
     const { data: { session } } = await authClient.auth.getSession();
 

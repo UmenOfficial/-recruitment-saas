@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Plus, Search, FileText, Clock, ChevronRight, MoreVertical, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';

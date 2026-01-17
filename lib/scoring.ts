@@ -30,6 +30,29 @@ export function calculateTScore(raw: number, mean: number, stdDev: number): numb
 
 /**
  * Centralized Personality Scoring Logic
+ * 
+ * -------------------------------------------------------------------------
+ * ⚠️ CRITICAL BUSINESS LOGIC - DO NOT MODIFY WITHOUT AUTHORIZATION ⚠️
+ * -------------------------------------------------------------------------
+ * This file implements the foundational scoring architecture for the Personality Test.
+ * 
+ * Core Principles (Immutable):
+ * 1. Norm Hierarchy:
+ *    - Scale Norms: GLOBAL (Shared across all tests). M=18~19, SD=2.5~3.2.
+ *    - Competency Norms: LOCAL (Test-specific). M=250, SD=Varies based on correlation (rho).
+ * 
+ * 2. Calculation Flow:
+ *    - Scale Raw = Sum of Question Scores
+ *    - Scale T-Score = Norm(Scale Raw) using Global Scale Norms
+ *    - Competency Raw = Sum of Scale T-Scores (NOT Raw Scores)
+ *    - Competency T-Score = Norm(Competency Raw) using Local Competency Norms (Distinct SDs)
+ *    - Total Raw = Sum of Competency T-Scores
+ *    - Total T-Score = Norm(Total Raw) using Local 'TOTAL' Norm
+ * 
+ * 3. Standard Deviations:
+ *    - Distinct SDs are applied to Competencies based on their internal correlation (rho).
+ *    - Do NOT revert to uniform SDs (e.g., SD=1 or SD=10 for all) without statistical validation.
+ * -------------------------------------------------------------------------
  */
 export function calculatePersonalityScores(
     answers: Record<string, string | number>,

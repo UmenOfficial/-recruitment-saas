@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Logo from "@/components/common/Logo";
 import { LayoutDashboard, FileText, Users, LogOut, Briefcase, MessageCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 

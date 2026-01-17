@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import NextImage from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft } from "lucide-react";
@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export const dynamic = 'force-dynamic';
 
 export default async function AptitudeTestsPage() {
-    const supabase = await createClient();
+    const supabase = await createServerSupabaseClient();
 
     const {
         data: { session },

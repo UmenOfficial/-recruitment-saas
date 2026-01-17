@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/global-client';
 import { Briefcase, MapPin, Clock, ArrowRight, Loader2, Calendar } from 'lucide-react';
 import Link from 'next/link';
 

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import ReportContent from "@/components/report/ReportContent";
 
@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export default async function ReportDetail({ params }: { params: Promise<{ id: string }> }) {
 
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createServerSupabaseClient();
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) redirect("/login?next=/candidate/dashboard/" + id);

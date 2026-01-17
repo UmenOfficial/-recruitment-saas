@@ -197,7 +197,7 @@ export default function ReportContent({
     const renderScaleCard = (item: { name: string, score: number } | undefined, type: 'high' | 'low') => {
         if (!item) {
             return (
-                <div key={Math.random()} className="bg-slate-50 border border-slate-100 border-dashed rounded-[2rem] p-8 flex flex-col items-center justify-center text-center h-full min-h-[160px] opacity-70">
+                <div className="bg-slate-50 border border-slate-100 border-dashed rounded-[2rem] p-8 flex flex-col items-center justify-center text-center h-full min-h-[160px] opacity-70">
                     <p className="text-slate-400 font-medium text-sm">Blank</p>
                 </div>
             );
@@ -208,7 +208,7 @@ export default function ReportContent({
         const bgClass = isHigh ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600';
 
         return (
-            <div key={item.name} className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100/60 hover:shadow-md transition-shadow group h-full">
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100/60 hover:shadow-md transition-shadow group h-full">
                 <div className="flex justify-between items-center mb-6">
                     <div className={`px-3 py-1 rounded-xl flex items-center justify-center font-bold text-xs ${bgClass}`}>
                         {isHigh ? 'High' : 'Low'}
@@ -329,7 +329,7 @@ export default function ReportContent({
                                                 <div className="flex items-start gap-3 text-indigo-600">
                                                     <Info size={16} className="mt-0.5 shrink-0" />
                                                     <p className="text-[13px] font-bold leading-relaxed">
-                                                        보완점들을 조금만 더 의식적으로 관리한다면, 귀하의 뛰어난 '{comp.name}' 역량은 한층 더 강력한 경쟁력이 될 것입니다.
+                                                        보완점들을 조금만 더 의식적으로 관리한다면, 귀하의 뛰어난 &apos;{comp.name}&apos; 역량은 한층 더 강력한 경쟁력이 될 것입니다.
                                                     </p>
                                                 </div>
                                             </div>
@@ -352,7 +352,11 @@ export default function ReportContent({
                                 <h3 className="text-xl font-bold text-slate-700">돋보이는 강점 (Top 4)</h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {[...Array(4)].map((_, i) => renderScaleCard(highScores[i], 'high'))}
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={`high-${i}`} className="h-full">
+                                        {renderScaleCard(highScores[i], 'high')}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                         <div className="h-px bg-slate-200/50"></div>
@@ -362,7 +366,11 @@ export default function ReportContent({
                                 <h3 className="text-xl font-bold text-slate-700">관리 및 보완 (Bottom 4)</h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {[...Array(4)].map((_, i) => renderScaleCard(lowScores[i], 'low'))}
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={`low-${i}`} className="h-full">
+                                        {renderScaleCard(lowScores[i], 'low')}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

@@ -23,7 +23,7 @@ export default function CandidateLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const router = useRouter();
 
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
