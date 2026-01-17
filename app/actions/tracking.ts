@@ -1,10 +1,15 @@
 'use server';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 
 export async function trackVisit() {
-    const supabase = await createServerSupabaseClient();
+    // START: Fix for RLS - Use Service Role Key to bypass RLS for logging
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // END: Fix for RLS
+
 
     // Get IP address if possible (best effort)
     const headersList = await headers();
