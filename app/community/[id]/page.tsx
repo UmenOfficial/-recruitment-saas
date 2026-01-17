@@ -1,7 +1,10 @@
+
 import { fetchPostDetail, getUserSession } from "../actions";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MessageCircle, LogIn, Lock, ImageIcon } from "lucide-react";
+import CommentForm from "../CommentForm";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = 'force-dynamic';
 
@@ -11,12 +14,28 @@ export default async function PostDetailPage({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params;
-    const post = await fetchPostDetail(id);
+    const post: any = await fetchPostDetail(id);
     const session = await getUserSession();
+
 
     if (!post) notFound();
 
     const isLoggedIn = !!session;
+
+    // Fetch Admin Role for UI
+    let isAdmin = false;
+    if (session) {
+        const supabase = await createServerSupabaseClient();
+        const { data: userRole } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single() as any;
+
+        isAdmin = userRole?.role === 'SUPER_ADMIN' || userRole?.role === 'ADMIN';
+    }
+
+    const isSecret = post.category === 'QNA';
 
     return (
         <div className="max-w-3xl mx-auto">
@@ -112,6 +131,7 @@ export default async function PostDetailPage({
                                 <div key={comment.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex items-center gap-2">
+                                            {/* Admin Badge if needed, but for now generic */}
                                             <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600">U</div>
                                             <span className="text-sm font-bold text-slate-700">익명</span>
                                         </div>
@@ -128,20 +148,12 @@ export default async function PostDetailPage({
                     </div>
 
                     {/* Comment Form */}
-                    <form action="#" className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex gap-3">
-                        {/* Placeholder for now. We need client interaction for real submission or Server Action with revalidate */}
-                        {/* Since this is a server component, we need a Client Component island for the form or standard form action */}
-                        {/* For simplicity as first pass, just UI. Real logic needs client comp. */}
-                        <div className="flex-1 bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-500">
-                            댓글 기능 준비 중...
-                        </div>
-                        <button type="button" disabled className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold flex items-center justify-center opacity-50 cursor-not-allowed">
-                            등록
-                        </button>
-                    </form>
+                    <CommentForm postId={id} isSecret={isSecret} isAdmin={isAdmin} />
+
                     <p className="text-xs text-slate-400 mt-2 ml-2">* 건전한 소통을 위해 비방이나 욕설은 제한될 수 있습니다.</p>
                 </div>
             )}
         </div>
     );
 }
+
