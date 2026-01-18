@@ -52,7 +52,8 @@ export async function fetchPostDetail(id: string) {
         .select(`
             *,
             comments (
-                id, content, created_at, user_id
+                id, content, created_at, user_id,
+                users ( role )
             )
         `)
         .eq('id', id)

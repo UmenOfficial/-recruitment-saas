@@ -161,9 +161,18 @@ export default async function PostDetailPage({
                                 <div key={comment.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex items-center gap-2">
-                                            {/* Admin Badge if needed, but for now generic */}
-                                            <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600">U</div>
-                                            <span className="text-sm font-bold text-slate-700">익명</span>
+                                            {/* Check if comment author is Admin */}
+                                            {(comment.users?.role === 'ADMIN' || comment.users?.role === 'SUPER_ADMIN') ? (
+                                                <>
+                                                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold text-white">M</div>
+                                                    <span className="text-sm font-bold text-indigo-700">Umen 관리자</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600">U</div>
+                                                    <span className="text-sm font-bold text-slate-700">익명</span>
+                                                </>
+                                            )}
                                         </div>
                                         <span className="text-xs text-slate-400">{new Date(comment.created_at).toLocaleDateString()}</span>
                                     </div>
