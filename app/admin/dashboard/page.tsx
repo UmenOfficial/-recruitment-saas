@@ -29,6 +29,10 @@ interface DailyVisitData {
  * 시스템의 주요 현황(지원자 수, 공고 수, 질문 수)과
  * 최근 지원자 활동 내역을 한눈에 보여줍니다.
  */
+import { fetchDashboardStats, fetchRecentAppsAction } from './actions';
+
+// ... (imports remain)
+
 export default function AdminDashboard() {
     const [stats, setStats] = useState<DashboardStats>({
         totalCandidates: 0,
@@ -48,73 +52,38 @@ export default function AdminDashboard() {
     useEffect(() => {
         async function loadStats() {
             try {
-                // Fetch visits separately or in Promise.all 
-                // We fetch last 30 days of visits for the chart
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                const result = await fetchDashboardStats();
 
-                const [
-                    { count: candidatesCount },
-                    { count: aptitudeCount },
-                    { count: personalityCount },
-                    { count: postingsCount },
-                    { data: recentApps, error: appsError },
-                    { data: visitedLogs, count: totalVisits }
-                ] = await Promise.all([
-                    supabase.from('applications').select('*', { count: 'exact', head: true }),
-                    supabase.from('questions').select('*', { count: 'exact', head: true }).eq('type', 'APTITUDE'),
-                    supabase.from('questions').select('*', { count: 'exact', head: true }).eq('type', 'PERSONALITY'),
-                    supabase.from('postings').select('*', { count: 'exact', head: true }),
-                    fetchRecentApps(1),
-                    supabase.from('audit_logs')
-                        .select('timestamp, actor_id', { count: 'exact' })
-                        .eq('action', 'HOMEPAGE_VISIT')
-                        .gte('timestamp', thirtyDaysAgo.toISOString())
-                ]);
+                if (!result.success || !result.data) {
+                    throw new Error(result.error);
+                }
 
-                // Also fetch TOTAL visits all time
-                const { count: allTimeVisits } = await supabase
-                    .from('audit_logs')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('action', 'HOMEPAGE_VISIT');
-
-                if (appsError) throw appsError;
+                const data = result.data;
 
                 // Process daily visits
                 const visitsByDate: Record<string, { loggedIn: number, notLoggedIn: number }> = {};
-                // Fill last 14 days with 0 at least
                 for (let i = 0; i < 14; i++) {
                     const d = new Date();
                     d.setDate(d.getDate() - i);
-                    // Store locally to sort later? Date sort is complex with locale string.
-                    // Better use ISO key YYYY-MM-DD
                     const isoKey = d.toISOString().split('T')[0];
                     visitsByDate[isoKey] = { loggedIn: 0, notLoggedIn: 0 };
                 }
 
-                visitedLogs?.forEach((log: any) => {
+                data.visitedLogs?.forEach((log: any) => {
                     const date = new Date(log.timestamp);
                     const isoKey = date.toISOString().split('T')[0];
-
-                    if (!visitsByDate[isoKey]) {
-                        // If data exists older than 14 days (since we fetched 30), it might be added here
-                        // But we map slice(-14) later anyway. 
-                        // However, to be safe if loop order matters or for 30 days chart later:
-                        visitsByDate[isoKey] = { loggedIn: 0, notLoggedIn: 0 };
-                    }
-
-                    if (log.actor_id) {
-                        visitsByDate[isoKey].loggedIn += 1;
-                    } else {
-                        visitsByDate[isoKey].notLoggedIn += 1;
+                    if (visitsByDate[isoKey]) {
+                        if (log.actor_id) {
+                            visitsByDate[isoKey].loggedIn += 1;
+                        } else {
+                            visitsByDate[isoKey].notLoggedIn += 1;
+                        }
                     }
                 });
 
                 const chartData = Object.entries(visitsByDate)
                     .sort((a, b) => a[0].localeCompare(b[0]))
-                    .slice(-14) // Last 14 days
                     .map(([dateIso, counts]) => {
-                        // dateIso is YYYY-MM-DD
                         const [year, month, day] = dateIso.split('-');
                         return {
                             date: `${month}-${day}`,
@@ -124,19 +93,16 @@ export default function AdminDashboard() {
                     });
 
                 setStats({
-                    totalCandidates: candidatesCount || 0,
-                    aptitudeCount: aptitudeCount || 0,
-                    personalityCount: personalityCount || 0,
-                    activePostings: postingsCount || 0,
-                    recentApps: recentApps || [],
-                    totalVisits: allTimeVisits || 0
+                    totalCandidates: data.candidatesCount,
+                    aptitudeCount: data.aptitudeCount,
+                    personalityCount: data.personalityCount,
+                    activePostings: data.postingsCount,
+                    recentApps: data.recentApps,
+                    totalVisits: data.allTimeVisits
                 });
                 setDailyVisits(chartData);
-                // ... rest of logic
 
-
-                // Check if there might be more (if we got full page)
-                if (recentApps && recentApps.length === ITEMS_PER_PAGE) {
+                if (data.recentApps && data.recentApps.length === ITEMS_PER_PAGE) {
                     setHasMoreApps(true);
                 } else {
                     setHasMoreApps(false);
@@ -152,28 +118,16 @@ export default function AdminDashboard() {
         loadStats();
     }, []);
 
-    const fetchRecentApps = async (page: number) => {
-        const from = (page - 1) * ITEMS_PER_PAGE;
-        const to = from + ITEMS_PER_PAGE - 1;
-
-        const { data, error } = await supabase.from('applications')
-            .select('id, created_at, status, name, users(full_name), postings(title)')
-            .order('created_at', { ascending: false })
-            .range(from, to);
-
-        return { data, error };
-    };
-
     const handlePageChange = async (newPage: number) => {
-        setLoading(true); // Partial loading could be better but global is fine for now
-        const { data, error } = await fetchRecentApps(newPage);
+        setLoading(true);
+        const result = await fetchRecentAppsAction(newPage);
 
-        if (data) {
-            setStats(prev => ({ ...prev, recentApps: data }));
+        if (result.success && result.data) {
+            setStats(prev => ({ ...prev, recentApps: result.data }));
             setRecentAppsPage(newPage);
-            setHasMoreApps(data.length === ITEMS_PER_PAGE);
+            setHasMoreApps(result.data.length === ITEMS_PER_PAGE);
         } else {
-            console.error(error);
+            console.error(result.error);
         }
         setLoading(false);
     };
