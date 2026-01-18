@@ -10,22 +10,21 @@ interface CommentFormProps {
     postId: string;
     isSecret?: boolean;
     isAdmin?: boolean;
+    isAuthor?: boolean;
 }
 
-export default function CommentForm({ postId, isSecret, isAdmin }: CommentFormProps) {
+export default function CommentForm({ postId, isSecret, isAdmin, isAuthor }: CommentFormProps) {
     const router = useRouter();
     const [content, setContent] = useState('');
     const [isPending, startTransition] = useTransition();
 
     // Permission Check Logic for UI (Optional, as Server Action also checks)
-    // If Secret and Not Admin, we might want to hide the form or disable it.
-    // User requested: "비밀글의 경우에는 관리자만 댓글을 남길 수 있게 해주고"
-    // So if isSecret && !isAdmin, we should hide it or show "Only Admin".
+    // If Secret and Not Admin AND Not Author, hide it.
 
-    if (isSecret && !isAdmin) {
+    if (isSecret && !isAdmin && !isAuthor) {
         return (
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center text-sm text-slate-500">
-                🔒 비밀글에는 관리자만 답변을 작성할 수 있습니다.
+                🔒 비밀글에는 작성자와 관리자만 댓글을 작성할 수 있습니다.
             </div>
         );
     }
@@ -51,12 +50,11 @@ export default function CommentForm({ postId, isSecret, isAdmin }: CommentFormPr
     return (
         <form onSubmit={handleSubmit} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex gap-3">
             <div className="flex-1">
-                <input
-                    type="text"
+                <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder={isSecret ? "관리자 답변 작성..." : "댓글을 입력하세요..."}
-                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
+                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400 resize-none min-h-[46px] h-[46px] focus:h-[100px]"
                     disabled={isPending}
                 />
             </div>

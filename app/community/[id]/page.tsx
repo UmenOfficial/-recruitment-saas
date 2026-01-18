@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MessageCircle, LogIn, Lock, ImageIcon } from "lucide-react";
 import CommentForm from "../CommentForm";
+import CommentList from "../CommentList";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = 'force-dynamic';
@@ -155,39 +156,20 @@ export default async function PostDetailPage({
                     </h3>
 
                     {/* Comment List */}
-                    <div className="space-y-4 mb-8">
-                        {post.comments && post.comments.length > 0 ? (
-                            post.comments.map((comment: any) => (
-                                <div key={comment.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex items-center gap-2">
-                                            {/* Check if comment author is Admin */}
-                                            {(comment.users?.role === 'ADMIN' || comment.users?.role === 'SUPER_ADMIN') ? (
-                                                <>
-                                                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold text-white">M</div>
-                                                    <span className="text-sm font-bold text-indigo-700">Umen 관리자</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600">U</div>
-                                                    <span className="text-sm font-bold text-slate-700">익명</span>
-                                                </>
-                                            )}
-                                        </div>
-                                        <span className="text-xs text-slate-400">{new Date(comment.created_at).toLocaleDateString()}</span>
-                                    </div>
-                                    <p className="text-slate-600 text-sm leading-relaxed">{comment.content}</p>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
-                                아직 댓글이 없습니다. 첫 댓글을 남겨주세요!
-                            </div>
-                        )}
-                    </div>
+                    <CommentList
+                        comments={post.comments}
+                        postId={id}
+                        currentUserId={session?.user.id}
+                        isAdmin={isAdmin}
+                    />
 
                     {/* Comment Form */}
-                    <CommentForm postId={id} isSecret={post.is_secret || post.category === 'QNA'} isAdmin={isAdmin} />
+                    <CommentForm
+                        postId={id}
+                        isSecret={post.is_secret || post.category === 'QNA'}
+                        isAdmin={isAdmin}
+                        isAuthor={post.user_id === session?.user.id}
+                    />
 
                     <p className="text-xs text-slate-400 mt-2 ml-2">* 건전한 소통을 위해 비방이나 욕설은 제한될 수 있습니다.</p>
                 </div>

@@ -206,8 +206,10 @@ export async function addComment(postId: string, content: string) {
         // What if Author wants to reply to Admin? Usually Q&A allows Author reply too.
         // But user said exactly: "관리자만 댓글을 작성할 수 있어야 해."
         // I will follow strictly: Only Admin.
-        if (!isAdmin) {
-            return { success: false, error: '비밀글에는 관리자만 답변을 작성할 수 있습니다.' };
+        const isAuthor = safePost.user_id === session.user.id;
+
+        if (!isAdmin && !isAuthor) {
+            return { success: false, error: '비밀글에는 작성자와 관리자만 댓글을 작성할 수 있습니다.' };
         }
     }
 
@@ -227,5 +229,83 @@ export async function addComment(postId: string, content: string) {
     revalidatePath('/community');
     revalidatePath(`/community/${postId}`);
 
+    return { success: true };
+}
+
+export async function updateComment(commentId: string, content: string) {
+    const supabase = await createServerSupabaseClient();
+    const session = await getUserSession();
+
+    if (!session) return { success: false, error: 'Unauthorized' };
+
+    // Check ownership or admin
+    const { data: comment } = await supabase
+        .from('comments')
+        .select('user_id')
+        .eq('id', commentId)
+        .single();
+
+    if (!comment) return { success: false, error: 'Comment not found' };
+
+    const { data: userRole } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+    const isAdmin = (userRole as any)?.role === 'ADMIN' || (userRole as any)?.role === 'SUPER_ADMIN';
+    const isAuthor = (comment as any).user_id === session.user.id;
+
+    if (!isAuthor && !isAdmin) {
+        return { success: false, error: 'Permission denied' };
+    }
+
+    const { error } = await supabase
+        .from('comments')
+        .update({ content } as any)
+        .eq('id', commentId);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath('/community');
+    return { success: true };
+}
+
+export async function deleteComment(commentId: string) {
+    const supabase = await createServerSupabaseClient();
+    const session = await getUserSession();
+
+    if (!session) return { success: false, error: 'Unauthorized' };
+
+    // Check ownership or admin
+    const { data: comment } = await supabase
+        .from('comments')
+        .select('user_id')
+        .eq('id', commentId)
+        .single();
+
+    if (!comment) return { success: false, error: 'Comment not found' };
+
+    const { data: userRole } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+    const isAdmin = (userRole as any)?.role === 'ADMIN' || (userRole as any)?.role === 'SUPER_ADMIN';
+    const isAuthor = (comment as any).user_id === session.user.id;
+
+    if (!isAuthor && !isAdmin) {
+        return { success: false, error: 'Permission denied' };
+    }
+
+    const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath('/community');
     return { success: true };
 }
