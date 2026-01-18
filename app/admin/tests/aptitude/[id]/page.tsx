@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase/global-client';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Search, Plus, Trash2, ArrowUp, ArrowDown, Save, GripVertical, Upload, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchAptitudeTestDetailAction, saveAptitudeTestConfigAction, updateAptitudeTestImageAction } from './actions';
+import { fetchAptitudeTestDetailAction, saveAptitudeTestConfigAction, updateAptitudeTestImageAction } from '../actions';
 
 interface PageProps {
     params: Promise<{ id: string }>;

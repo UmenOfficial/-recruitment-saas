@@ -1,16 +1,67 @@
+
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
-const supabase = createClient(
+// Dangerous: Service Role Client (Bypasses RLS)
+const serviceSupabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Helper: Ensure the user is an admin
+async function ensureAdmin() {
+    const cookieStore = await cookies();
+
+    // 1. Create a standard SSR client to check the session from cookies
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll();
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch {
+                        // The `setAll` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
+            },
+        }
+    );
+
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+        throw new Error('Unauthorized');
+    }
+
+    // 2. Check Admin Role using Service Role Client (to read 'users' table confidently)
+    const { data: userData, error: userError } = await serviceSupabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+    if (userError || !userData || (userData.role !== 'ADMIN' && userData.role !== 'SUPER_ADMIN')) {
+        throw new Error('Forbidden: Insufficient Permissions');
+    }
+}
+
 export async function fetchAptitudeTestsAction() {
     try {
-        const { data: testsData, error } = await supabase
+        await ensureAdmin();
+        const { data: testsData, error } = await serviceSupabase
             .from('tests')
             .select('*, test_questions(count)')
             .eq('type', 'APTITUDE')
@@ -33,7 +84,8 @@ export async function fetchAptitudeTestsAction() {
 
 export async function createAptitudeTestAction(title: string, description: string, time_limit: number | null) {
     try {
-        const { error } = await supabase
+        await ensureAdmin();
+        const { error } = await serviceSupabase
             .from('tests')
             .insert({
                 title,
@@ -54,7 +106,8 @@ export async function createAptitudeTestAction(title: string, description: strin
 
 export async function updateAptitudeTestAction(id: string, title: string, description: string, time_limit: number | null) {
     try {
-        const { error } = await supabase
+        await ensureAdmin();
+        const { error } = await serviceSupabase
             .from('tests')
             .update({
                 title,
@@ -76,7 +129,8 @@ export async function updateAptitudeTestAction(id: string, title: string, descri
 
 export async function deleteAptitudeTestAction(id: string) {
     try {
-        const { error } = await supabase.from('tests').delete().eq('id', id);
+        await ensureAdmin();
+        const { error } = await serviceSupabase.from('tests').delete().eq('id', id);
 
         if (error) throw error;
 
@@ -89,8 +143,9 @@ export async function deleteAptitudeTestAction(id: string) {
 
 export async function fetchAptitudeTestDetailAction(id: string) {
     try {
+        await ensureAdmin();
         // 1. Fetch Test Details
-        const { data: testData, error: testError } = await supabase
+        const { data: testData, error: testError } = await serviceSupabase
             .from('tests')
             .select('*')
             .eq('id', id)
@@ -98,7 +153,7 @@ export async function fetchAptitudeTestDetailAction(id: string) {
         if (testError) throw testError;
 
         // 2. Fetch All Aptitude Questions
-        const { data: allQuestions, error: qError } = await supabase
+        const { data: allQuestions, error: qError } = await serviceSupabase
             .from('questions')
             .select('*')
             .eq('type', 'APTITUDE')
@@ -106,7 +161,7 @@ export async function fetchAptitudeTestDetailAction(id: string) {
         if (qError) throw qError;
 
         // 3. Fetch Already Added Questions (with existing order)
-        const { data: existingRelations, error: rError } = await supabase
+        const { data: existingRelations, error: rError } = await serviceSupabase
             .from('test_questions')
             .select('question_id, order_index, questions(*)')
             .eq('test_id', id)
@@ -139,9 +194,10 @@ export async function saveAptitudeTestConfigAction(
     imageUrl?: string
 ) {
     try {
+        await ensureAdmin();
         // 1. Update Image if provided (optional)
         if (imageUrl !== undefined) {
-            const { error: imgError } = await supabase
+            const { error: imgError } = await serviceSupabase
                 .from('tests')
                 .update({ image_url: imageUrl })
                 .eq('id', testId);
@@ -149,7 +205,7 @@ export async function saveAptitudeTestConfigAction(
         }
 
         // 2. Delete existing relations
-        const { error: delError } = await supabase
+        const { error: delError } = await serviceSupabase
             .from('test_questions')
             .delete()
             .eq('test_id', testId);
@@ -163,7 +219,7 @@ export async function saveAptitudeTestConfigAction(
                 order_index: item.order_index
             }));
 
-            const { error: insError } = await supabase
+            const { error: insError } = await serviceSupabase
                 .from('test_questions')
                 .insert(payload);
             if (insError) throw insError;
@@ -180,7 +236,8 @@ export async function saveAptitudeTestConfigAction(
 
 export async function updateAptitudeTestImageAction(id: string, imageUrl: string) {
     try {
-        const { error } = await supabase
+        await ensureAdmin();
+        const { error } = await serviceSupabase
             .from('tests')
             .update({ image_url: imageUrl })
             .eq('id', id);
