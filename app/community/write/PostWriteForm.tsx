@@ -42,7 +42,7 @@ export default function PostWriteForm() {
             const imageUrls: string[] = [];
             if (images.length > 0) {
                 setUploading(true);
-                const supabase = await createServerSupabaseClient();
+                const supabase = createClient();
 
                 for (const file of images) {
                     const ext = file.name.split('.').pop();
@@ -120,6 +120,17 @@ export default function PostWriteForm() {
                     placeholder="자유롭게 이야기를 나누어보세요. (취업 고민, 면접 후기 등)"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none leading-relaxed"
                 ></textarea>
+            </div>
+
+            {/* Secret Setting */}
+            <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" name="is_secret" className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer" />
+                    <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">비밀글로 작성하기</span>
+                </label>
+                <span className="text-xs text-slate-400">
+                    (작성자와 관리자만 내용을 확인할 수 있습니다)
+                </span>
             </div>
 
             {/* Image Upload */}

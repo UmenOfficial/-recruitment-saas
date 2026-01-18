@@ -28,9 +28,9 @@ export function Sidebar() {
                 <NavLink href="/admin/dashboard" icon={<LayoutDashboard size={18} />}>
                     대시보드
                 </NavLink>
-                <NavLink href="/admin/postings" icon={<Briefcase size={18} />}>
+                {/* <NavLink href="/admin/postings" icon={<Briefcase size={18} />}>
                     채용 공고
-                </NavLink>
+                </NavLink> */}
 
                 {/* 문제 관리 (Questions) */}
                 <div className="pt-2 pb-1">

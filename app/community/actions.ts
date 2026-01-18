@@ -4,9 +4,14 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function getUserSession() {
     const supabase = await createServerSupabaseClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    return session;
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session;
+    } catch (error) {
+        return null;
+    }
 }
+
 
 export async function fetchPosts(category?: string) {
     const supabase = await createServerSupabaseClient();
@@ -61,6 +66,45 @@ export async function fetchPostDetail(id: string) {
         safePost.comments.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
+    // Secret Post Access Control
+    // If is_secret is true, only Admin OR Author can view
+    if (safePost.is_secret) {
+        const session = await getUserSession();
+        // If no session, return locked post (Viewer is Guest)
+        if (!session) {
+            return {
+                ...safePost,
+                content: null,
+                image_urls: [],
+                comments: [],
+                is_locked: true
+            };
+        }
+
+        const { data: userRole } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+        const safeUserRole = userRole as any;
+        const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' || safeUserRole?.role === 'ADMIN';
+        const isAuthor = safePost.user_id === session.user.id;
+
+        if (!isAdmin && !isAuthor) {
+            // Return limited data or null?
+            // Usually returns error or limited data.
+            // Let's return a special flag or just minimal data so UI can show "Secret Post" lock screen.
+            return {
+                ...safePost,
+                content: null, // Hide content
+                image_urls: [], // Hide images
+                comments: [], // Hide comments
+                is_locked: true // UI helper flag
+            };
+        }
+    }
+
     return safePost;
 }
 
@@ -75,7 +119,7 @@ export async function addComment(postId: string, content: string) {
     // Check Post status
     const { data: post, error: postError } = await supabase
         .from('posts')
-        .select('category, user_id')
+        .select('*')
         .eq('id', postId)
         .single();
 
@@ -94,11 +138,17 @@ export async function addComment(postId: string, content: string) {
     const safeUserRole = userRole as any;
     const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' || safeUserRole?.role === 'ADMIN';
 
-    // Secret Post Logic (QNA)
-    const isSecret = safePost.category === 'QNA';
+    // Secret Post Logic (QNA OR is_secret)
+    // We treat QNA as secret by default for backward compatibility, AND check is_secret column
+    const isSecret = safePost.is_secret || safePost.category === 'QNA';
 
     if (isSecret) {
         // Only Admin can comment on Secret Posts
+        // Wait, Author cannot comment on their own secret post?
+        // Requirement: "user가 글을 작성하면 관리자만 댓글을 작성할 수 있어야 해." -> Yes, Author creates post, Admin replies.
+        // What if Author wants to reply to Admin? Usually Q&A allows Author reply too.
+        // But user said exactly: "관리자만 댓글을 작성할 수 있어야 해."
+        // I will follow strictly: Only Admin.
         if (!isAdmin) {
             return { success: false, error: '비밀글에는 관리자만 답변을 작성할 수 있습니다.' };
         }

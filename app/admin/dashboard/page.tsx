@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 import { supabase } from '@/lib/supabase/global-client';
 import { Users, FileText, Briefcase, TrendingUp, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface DashboardStats {
     totalCandidates: number;
@@ -15,6 +15,12 @@ interface DashboardStats {
     activePostings: number;
     totalVisits: number;
     recentApps: any[];
+}
+
+interface DailyVisitData {
+    date: string;
+    loggedIn: number;
+    notLoggedIn: number;
 }
 
 /**
@@ -37,7 +43,7 @@ export default function AdminDashboard() {
     const [hasMoreApps, setHasMoreApps] = useState(false);
     const ITEMS_PER_PAGE = 10;
 
-    const [dailyVisits, setDailyVisits] = useState<any[]>([]);
+    const [dailyVisits, setDailyVisits] = useState<DailyVisitData[]>([]);
 
     useEffect(() => {
         async function loadStats() {
@@ -61,7 +67,7 @@ export default function AdminDashboard() {
                     supabase.from('postings').select('*', { count: 'exact', head: true }),
                     fetchRecentApps(1),
                     supabase.from('audit_logs')
-                        .select('timestamp', { count: 'exact' })
+                        .select('timestamp, actor_id', { count: 'exact' })
                         .eq('action', 'HOMEPAGE_VISIT')
                         .gte('timestamp', thirtyDaysAgo.toISOString())
                 ]);
@@ -75,31 +81,47 @@ export default function AdminDashboard() {
                 if (appsError) throw appsError;
 
                 // Process daily visits
-                const visitsByDate: Record<string, number> = {};
-                // Fill last 7 days with 0 at least
-                for (let i = 0; i < 7; i++) {
+                const visitsByDate: Record<string, { loggedIn: number, notLoggedIn: number }> = {};
+                // Fill last 14 days with 0 at least
+                for (let i = 0; i < 14; i++) {
                     const d = new Date();
                     d.setDate(d.getDate() - i);
-                    const dateStr = d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
                     // Store locally to sort later? Date sort is complex with locale string.
                     // Better use ISO key YYYY-MM-DD
                     const isoKey = d.toISOString().split('T')[0];
-                    visitsByDate[isoKey] = 0;
+                    visitsByDate[isoKey] = { loggedIn: 0, notLoggedIn: 0 };
                 }
 
                 visitedLogs?.forEach((log: any) => {
                     const date = new Date(log.timestamp);
                     const isoKey = date.toISOString().split('T')[0];
-                    visitsByDate[isoKey] = (visitsByDate[isoKey] || 0) + 1;
+
+                    if (!visitsByDate[isoKey]) {
+                        // If data exists older than 14 days (since we fetched 30), it might be added here
+                        // But we map slice(-14) later anyway. 
+                        // However, to be safe if loop order matters or for 30 days chart later:
+                        visitsByDate[isoKey] = { loggedIn: 0, notLoggedIn: 0 };
+                    }
+
+                    if (log.actor_id) {
+                        visitsByDate[isoKey].loggedIn += 1;
+                    } else {
+                        visitsByDate[isoKey].notLoggedIn += 1;
+                    }
                 });
 
                 const chartData = Object.entries(visitsByDate)
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .slice(-14) // Last 14 days
-                    .map(([date, count]) => ({
-                        date: date.substring(5), // MM-DD
-                        count
-                    }));
+                    .map(([dateIso, counts]) => {
+                        // dateIso is YYYY-MM-DD
+                        const [year, month, day] = dateIso.split('-');
+                        return {
+                            date: `${month}-${day}`,
+                            loggedIn: counts.loggedIn,
+                            notLoggedIn: counts.notLoggedIn
+                        };
+                    });
 
                 setStats({
                     totalCandidates: candidatesCount || 0,
@@ -175,7 +197,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* 통계 그리드 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatsCard
                     title="총 방문 수"
                     value={stats.totalVisits.toLocaleString()}
@@ -190,13 +212,13 @@ export default function AdminDashboard() {
                     trend="전체 지원자"
                     color="bg-blue-50"
                 />
-                <StatsCard
+                {/* <StatsCard
                     title="진행 중인 공고"
                     value={stats.activePostings}
                     icon={<Briefcase size={24} className="text-purple-600" />}
                     trend="현재 활성화됨"
                     color="bg-purple-50"
-                />
+                /> */}
                 <StatsCard
                     title="인성검사 문항"
                     value={stats.personalityCount}
@@ -222,7 +244,12 @@ export default function AdminDashboard() {
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                 cursor={{ fill: '#f1f5f9' }}
                             />
-                            <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} name="방문자 수" />
+                            <Legend
+                                wrapperStyle={{ paddingTop: '20px' }}
+                                iconType="rect"
+                            />
+                            <Bar dataKey="loggedIn" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={30} name="로그인 방문자" />
+                            <Bar dataKey="notLoggedIn" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={30} name="비로그인 방문자" />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

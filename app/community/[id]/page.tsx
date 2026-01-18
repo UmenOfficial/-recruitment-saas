@@ -49,6 +49,12 @@ export default async function PostDetailPage({
                         }`}>
                         {post.category}
                     </span>
+                    {(post.is_secret || post.category === 'QNA') && (
+                        <span className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                            <Lock size={12} />
+                            비밀글
+                        </span>
+                    )}
                     <span className="text-sm text-slate-400">
                         {new Date(post.created_at).toLocaleDateString()}
                     </span>
@@ -63,58 +69,82 @@ export default async function PostDetailPage({
                 </div>
             </div>
 
-            {/* Post Content Area */}
-            <div className="bg-white p-8 pt-2 rounded-b-[2rem] border border-slate-200 border-t-0 shadow-sm relative overflow-hidden min-h-[300px]">
-
-                {/* Image Gallery (Logged In Only OR First Image Blurred for Guest) */}
-                {post.image_urls && post.image_urls.length > 0 && (
-                    <div className="mb-6 grid grid-cols-2 gap-2">
-                        {isLoggedIn ? (
-                            post.image_urls.map((url: string, idx: number) => (
-                                <img key={idx} src={url} alt={`Image ${idx}`} className="w-full h-48 object-cover rounded-xl border border-slate-100" />
-                            ))
-                        ) : (
-                            // Guest: Show first image blurred
-                            <div className="relative w-full h-48 rounded-xl overflow-hidden bg-slate-100">
-                                <img src={post.image_urls[0]} alt="Blurred" className="w-full h-full object-cover blur-xl opacity-50" />
-                                <div className="absolute inset-0 flex items-center justify-center text-slate-500 font-bold bg-white/30">
-                                    <ImageIcon size={24} className="mr-2" />
-                                    이미지 숨김 처리됨
-                                </div>
-                            </div>
-                        )}
+            {/* Secret Post Lock Screen */}
+            {post.is_locked ? (
+                <div className="bg-white p-12 rounded-b-[2rem] border border-slate-200 border-t-0 shadow-sm text-center min-h-[300px] flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                        <Lock size={32} className="text-slate-400" />
                     </div>
-                )}
-
-                {/* Text Content */}
-                <div className={`prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-line ${!isLoggedIn && "blur-[2px] select-none opacity-60"}`}>
-                    {isLoggedIn ? post.content : post.content.slice(0, 50) + "\n\n(내용이 더 있습니다...)"}
-                    {!isLoggedIn && (
-                        // Fake Text for visual filler
-                        Array(5).fill(0).map((_, i) => (
-                            <p key={i} className="text-slate-300">
-                                로그인하지 않은 사용자에게는 내용이 보이지 않습니다. 이 영역은 블러 처리된 텍스트입니다.
-                                커뮤니티의 건전한 운영을 위해 로그인이 필요합니다.
-                            </p>
-                        ))
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">비밀글입니다</h3>
+                    <p className="text-slate-500 mb-8 max-w-xs mx-auto">
+                        작성자와 관리자만 내용을 확인할 수 있습니다.<br />
+                        본인이 작성한 글이라면 로그인해주세요.
+                    </p>
+                    {!session && (
+                        <Link href={`/login?next=/community/${id}`} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors">
+                            로그인하기
+                        </Link>
+                    )}
+                    {session && (
+                        <button onClick={() => history.back()} className="px-6 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+                            뒤로가기
+                        </button>
                     )}
                 </div>
+            ) : (
+                /* Post Content Area */
+                <div className="bg-white p-8 pt-2 rounded-b-[2rem] border border-slate-200 border-t-0 shadow-sm relative overflow-hidden min-h-[300px]">
 
-                {/* Login Overlay for Guest */}
-                {!isLoggedIn && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/90 to-transparent flex flex-col items-center justify-center pt-20">
-                        <Lock size={48} className="text-indigo-200 mb-4" />
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">로그인이 필요한 콘텐츠입니다</h3>
-                        <p className="text-slate-500 mb-6 text-center max-w-xs">
-                            전체 내용과 댓글을 확인하려면<br />로그인이 필요해요.
-                        </p>
-                        <Link href={`/login?next=/community/${id}`} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg hover:translate-y-[-2px] transition-all flex items-center gap-2">
-                            <LogIn size={20} />
-                            3초만에 로그인하기
-                        </Link>
+                    {/* Image Gallery (Logged In Only OR First Image Blurred for Guest) */}
+                    {post.image_urls && post.image_urls.length > 0 && (
+                        <div className="mb-6 grid grid-cols-2 gap-2">
+                            {isLoggedIn ? (
+                                post.image_urls.map((url: string, idx: number) => (
+                                    <img key={idx} src={url} alt={`Image ${idx}`} className="w-full h-48 object-cover rounded-xl border border-slate-100" />
+                                ))
+                            ) : (
+                                // Guest: Show first image blurred
+                                <div className="relative w-full h-48 rounded-xl overflow-hidden bg-slate-100">
+                                    <img src={post.image_urls[0]} alt="Blurred" className="w-full h-full object-cover blur-xl opacity-50" />
+                                    <div className="absolute inset-0 flex items-center justify-center text-slate-500 font-bold bg-white/30">
+                                        <ImageIcon size={24} className="mr-2" />
+                                        이미지 숨김 처리됨
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Text Content */}
+                    <div className={`prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-line ${!isLoggedIn && "blur-[2px] select-none opacity-60"}`}>
+                        {isLoggedIn ? post.content : post.content.slice(0, 50) + "\n\n(내용이 더 있습니다...)"}
+                        {!isLoggedIn && (
+                            // Fake Text for visual filler
+                            Array(5).fill(0).map((_, i) => (
+                                <p key={i} className="text-slate-300">
+                                    로그인하지 않은 사용자에게는 내용이 보이지 않습니다. 이 영역은 블러 처리된 텍스트입니다.
+                                    커뮤니티의 건전한 운영을 위해 로그인이 필요합니다.
+                                </p>
+                            ))
+                        )}
                     </div>
-                )}
-            </div>
+
+                    {/* Login Overlay for Guest */}
+                    {!isLoggedIn && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/90 to-transparent flex flex-col items-center justify-center pt-20">
+                            <Lock size={48} className="text-indigo-200 mb-4" />
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">로그인이 필요한 콘텐츠입니다</h3>
+                            <p className="text-slate-500 mb-6 text-center max-w-xs">
+                                전체 내용과 댓글을 확인하려면<br />로그인이 필요해요.
+                            </p>
+                            <Link href={`/login?next=/community/${id}`} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg hover:translate-y-[-2px] transition-all flex items-center gap-2">
+                                <LogIn size={20} />
+                                3초만에 로그인하기
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Comments Section (Logged In Only) */}
             {isLoggedIn && (
@@ -148,7 +178,7 @@ export default async function PostDetailPage({
                     </div>
 
                     {/* Comment Form */}
-                    <CommentForm postId={id} isSecret={isSecret} isAdmin={isAdmin} />
+                    <CommentForm postId={id} isSecret={post.is_secret || post.category === 'QNA'} isAdmin={isAdmin} />
 
                     <p className="text-xs text-slate-400 mt-2 ml-2">* 건전한 소통을 위해 비방이나 욕설은 제한될 수 있습니다.</p>
                 </div>

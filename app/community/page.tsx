@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageSquare, ImageIcon, MessageCircle } from "lucide-react";
+import { MessageSquare, ImageIcon, MessageCircle, Lock } from "lucide-react";
 import { fetchPosts } from "./actions";
 
 export const dynamic = 'force-dynamic';
@@ -55,25 +55,36 @@ export default async function CommunityPage({
                         <Link key={post.id} href={`/community/${post.id}`} className="block">
                             <div className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group">
                                 <div className="flex justify-between items-start mb-2">
-                                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${post.category === 'FREE' ? 'bg-slate-100 text-slate-600' :
-                                        post.category === 'QNA' ? 'bg-orange-100 text-orange-600' :
-                                            post.category === 'REVIEW' ? 'bg-green-100 text-green-600' :
-                                                'bg-indigo-100 text-indigo-600'
-                                        }`}>
-                                        {post.category}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${post.category === 'FREE' ? 'bg-slate-100 text-slate-600' :
+                                            post.category === 'QNA' ? 'bg-orange-100 text-orange-600' :
+                                                post.category === 'REVIEW' ? 'bg-green-100 text-green-600' :
+                                                    'bg-indigo-100 text-indigo-600'
+                                            }`}>
+                                            {post.category}
+                                        </span>
+                                        {(post.is_secret || post.category === 'QNA') && (
+                                            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
+                                                <Lock size={10} />
+                                                비밀글
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="text-xs text-slate-400">
                                         {new Date(post.created_at).toLocaleDateString()}
                                     </span>
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-800 group-hover:text-indigo-700 transition-colors line-clamp-1 mb-2">
+                                <h3 className="text-lg font-bold text-slate-800 group-hover:text-indigo-700 transition-colors line-clamp-1 mb-2 flex items-center gap-2">
                                     {post.title}
                                 </h3>
                                 <p className="text-sm text-slate-500 line-clamp-2 mb-4 h-[40px]">
-                                    {post.content}
+                                    {(post.is_secret || post.category === 'QNA') ?
+                                        "🔒 이 글은 비밀글입니다. 작성자와 관리자만 내용을 확인할 수 있습니다." :
+                                        post.content
+                                    }
                                 </p>
                                 <div className="flex items-center gap-4 text-xs font-medium text-slate-400">
-                                    {post.image_urls && post.image_urls.length > 0 && (
+                                    {post.image_urls && post.image_urls.length > 0 && !(post.is_secret || post.category === 'QNA') && (
                                         <div className="flex items-center gap-1 text-slate-500">
                                             <ImageIcon size={14} />
                                             사진

@@ -15,6 +15,8 @@ export async function createPostAction(formData: FormData) {
     const title = formData.get('title') as string;
     const content = formData.get('content') as string;
     const category = formData.get('category') as string;
+    const isSecret = formData.get('is_secret') === 'on';
+
     // Image URLs are handled by client upload -> passed as hidden input strings joined by comma or similar
     // Or we handle upload here? Plan says: Drag & Drop upload. 
     // Usually client uploads to storage -> gets URL -> sends URL to DB.
@@ -33,7 +35,8 @@ export async function createPostAction(formData: FormData) {
             content,
             category,
             image_urls: imageUrls,
-        })
+            is_secret: isSecret,
+        } as any)
         .select()
         .single();
 
