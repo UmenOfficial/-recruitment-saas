@@ -135,15 +135,17 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
                     stopTimer();
                     setShowTimeoutDialog(true);
                 }
-
-                // Auto-save every 5 seconds
-                if (newValue % 5 === 0) {
-                    saveProgress();
-                }
                 return newValue;
             });
         }, 1000);
     };
+
+    // Auto-save Effect
+    useEffect(() => {
+        if (elapsedSeconds > 0 && elapsedSeconds % 5 === 0) {
+            saveProgress();
+        }
+    }, [elapsedSeconds, saveProgress]);
 
     const stopTimer = () => {
         if (timerRef.current) {
