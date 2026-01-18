@@ -31,3 +31,11 @@
 - **Server Actions**: Use `use server` at the top of the file.
 - **RLS Bypassing**: Only use `SUPABASE_SERVICE_ROLE_KEY` in Server Actions for administrative tasks. Never expose it to the client.
 - **Type Safety**: No `any`. Use interfaces/types defined in `types/` or generate them via `npm run sync-db`.
+
+## 5. Language Rules (언어 규칙)
+- **Primary Language**: Korean (한국어)
+- **Scope**:
+  - User Communication (Chat)
+  - Code Comments (Docstrings, Inline comments)
+  - GitHub Pull Request (PR) Descriptions & Commit Messages
+- **Exceptions**: Standard English technical terms (e.g., Request, Response, Handler) can be used where appropriate for clarity.

@@ -34,3 +34,11 @@ This is a **Recruitment SaaS** platform built with Next.js 16 and Supabase. We f
 
 ## 6. Known Issues / Active Tasks
 - Check `task.md` in the artifacts directory for the live todo list.
+
+## 7. Language Rules (언어 규칙)
+- **Communication**: All interactions with the user MUST be in **Korean**.
+- **Documentation**:
+  - Code comments: **Korean**
+  - Commit messages: **Korean**
+  - PR descriptions: **Korean**
+- **Goal**: Ensure seamless collaboration with the Korean-speaking user.
