@@ -1,6 +1,7 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 export async function getUserSession() {
     const supabase = await createServerSupabaseClient();
@@ -14,7 +15,13 @@ export async function getUserSession() {
 
 
 export async function fetchPosts(category?: string) {
-    const supabase = await createServerSupabaseClient();
+    // Use Service Role to bypass RLS for Comment Counts
+    // (Regular client hides comment counts for Anon users on Secret posts)
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     let query = supabase
         .from('posts')
@@ -35,11 +42,24 @@ export async function fetchPosts(category?: string) {
         return [];
     }
 
-    // Map comment count
-    return (data as any[]).map((post: any) => ({
-        ...post,
-        comment_count: post.comments?.[0]?.count || 0
-    }));
+    // Process posts:
+    // 1. Map comment count
+    // 2. Sanitize Secret Posts (Hide content/images in List View for safety)
+    return (data as any[]).map((post: any) => {
+        const isSecret = post.is_secret || post.category === 'QNA';
+
+        // In List View, we always hide secret content regardless of user role
+        // (See app/community/page.tsx logic which always shows lock message)
+        const content = isSecret ? null : post.content;
+        const imageUrls = isSecret ? [] : post.image_urls;
+
+        return {
+            ...post,
+            content: content,
+            image_urls: imageUrls,
+            comment_count: post.comments?.[0]?.count || 0
+        };
+    });
 }
 
 export async function fetchPostDetail(id: string) {
@@ -52,19 +72,55 @@ export async function fetchPostDetail(id: string) {
         .select(`
             *,
             comments (
-                id, content, created_at, user_id,
-                users ( role )
+                id, content, created_at, user_id
             )
         `)
         .eq('id', id)
         .single();
 
-    if (error) return null;
+    if (error) {
+        console.error('fetchPostDetail Error:', error);
+        return null;
+    }
 
     // Sort comments by created_at desc
     const safePost = post as any;
-    if (safePost.comments) {
+    if (safePost.comments && safePost.comments.length > 0) {
         safePost.comments.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        // Fetch User Roles for Comments (Manually to bypass RLS/Relation issues)
+        // Use Service Role to ensure we can read roles regardless of current user
+        try {
+            const { createClient } = require('@supabase/supabase-js');
+            const serviceSupabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!
+            );
+
+            const userIds = safePost.comments.map((c: any) => c.user_id);
+            // Deduplicate
+            const uniqueUserIds = Array.from(new Set(userIds));
+
+            if (uniqueUserIds.length > 0) {
+                const { data: users, error: userError } = await serviceSupabase
+                    .from('users')
+                    .select('id, role')
+                    .in('id', uniqueUserIds);
+
+                if (!userError && users) {
+                    const userMap = new Map();
+                    users.forEach((u: any) => userMap.set(u.id, u));
+
+                    safePost.comments = safePost.comments.map((c: any) => ({
+                        ...c,
+                        users: userMap.get(c.user_id) || null
+                    }));
+                }
+            }
+        } catch (e) {
+            console.error('Error fetching comment user roles:', e);
+            // Fallback: comments remain as is (users will be undefined/null), UI will show "Anonymous"
+        }
     }
 
     // Secret Post Access Control
@@ -167,6 +223,9 @@ export async function addComment(postId: string, content: string) {
         console.error('Comment Insert Error:', error);
         return { success: false, error: '댓글 작성 실패' };
     }
+
+    revalidatePath('/community');
+    revalidatePath(`/community/${postId}`);
 
     return { success: true };
 }
