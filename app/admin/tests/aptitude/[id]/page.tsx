@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/global-client';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Search, Plus, Trash2, ArrowUp, ArrowDown, Save, GripVertical, Upload, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { fetchAptitudeTestDetailAction, saveAptitudeTestConfigAction, updateAptitudeTestImageAction } from './actions';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -51,40 +52,19 @@ export default function AptitudeTestBuilder({ params }: PageProps) {
         try {
             setLoading(true);
 
-            // 1. Fetch Test Details
-            const { data: testData, error: testError } = await supabase
-                .from('tests')
-                .select('*')
-                .eq('id', id)
-                .single();
-            if (testError) throw testError;
+            const res = await fetchAptitudeTestDetailAction(id);
+            if (!res.success || !res.data) {
+                throw new Error(res.error || 'Failed to fetch');
+            }
+
+            const { test: testData, allQuestions, addedQuestions } = res.data;
+
             setTest(testData);
 
-            // 2. Fetch All Aptitude Questions
-            const { data: allQuestions, error: qError } = await supabase
-                .from('questions')
-                .select('*')
-                .eq('type', 'APTITUDE')
-                .order('created_at', { ascending: false });
-            if (qError) throw qError;
-
-            // 3. Fetch Already Added Questions (with existing order)
-            const { data: existingRelations, error: rError } = await supabase
-                .from('test_questions')
-                .select('question_id, order_index, questions(*)')
-                .eq('test_id', id)
-                .order('order_index', { ascending: true });
-            if (rError) throw rError;
-
             // Separate Added vs Available
-            const addedIds = new Set(existingRelations.map((r: any) => r.question_id));
+            const addedIds = new Set(addedQuestions.map((q: any) => q.id));
 
-            const addedList = existingRelations.map((r: any) => ({
-                ...r.questions,
-                order_index: r.order_index // Keep relation's order
-            }));
-
-            setTestQuestions(addedList);
+            setTestQuestions(addedQuestions);
             setAvailableQuestions(allQuestions.filter((q: any) => !addedIds.has(q.id)));
 
         } catch (error: any) {
@@ -154,7 +134,8 @@ export default function AptitudeTestBuilder({ params }: PageProps) {
             const fileName = `${id}-${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            // 1. Upload to Storage
+            // 1. Upload to Storage (Client-side is authorized for storage mostly, but if strict RLS, might need backend proxy? 
+            // Assuming storage policies are separate. Keep storage call client side for now.)
             const { error: uploadError } = await supabase.storage
                 .from('test-images')
                 .upload(filePath, file);
@@ -166,12 +147,9 @@ export default function AptitudeTestBuilder({ params }: PageProps) {
                 .from('test-images')
                 .getPublicUrl(filePath);
 
-            // 3. Update DB
-            const { error: dbError } = await (supabase.from('tests') as any)
-                .update({ image_url: publicUrl })
-                .eq('id', id);
-
-            if (dbError) throw dbError;
+            // 3. Update DB via Action
+            const updated = await updateAptitudeTestImageAction(id, publicUrl);
+            if (!updated.success) throw new Error(updated.error);
 
             // 4. Update Local State
             setTest((prev: any) => ({ ...prev, image_url: publicUrl }));
@@ -199,26 +177,14 @@ export default function AptitudeTestBuilder({ params }: PageProps) {
         if (!test) return;
         setIsSaving(true);
         try {
-            // 1. Delete all existing relations for this test
-            const { error: delError } = await supabase
-                .from('test_questions')
-                .delete()
-                .eq('test_id', test.id);
-            if (delError) throw delError;
+            const relations = testQuestions.map((q, idx) => ({
+                question_id: q.id,
+                order_index: idx
+            }));
 
-            // 2. Insert new relations with updated order
-            if (testQuestions.length > 0) {
-                const payload = testQuestions.map((q, idx) => ({
-                    test_id: test.id,
-                    question_id: q.id,
-                    order_index: idx
-                }));
+            const res = await saveAptitudeTestConfigAction(test.id, relations);
 
-                const { error: insError } = await (supabase
-                    .from('test_questions') as any)
-                    .insert(payload);
-                if (insError) throw insError;
-            }
+            if (!res.success) throw new Error(res.error);
 
             toast.success('검사지가 저장되었습니다.');
             fetchData();

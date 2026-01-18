@@ -6,6 +6,12 @@ import { supabase } from '@/lib/supabase/global-client';
 import { ArrowLeft, Save, Loader2, Link as LinkIcon, Trash2, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { toast, Toaster } from 'sonner';
+import {
+    fetchPostingDetailAction,
+    updatePostingAction,
+    fetchActiveTestsAction,
+    deletePostingAction
+} from '../actions';
 
 export default function PostingDetailPage() {
     const params = useParams();
@@ -24,39 +30,43 @@ export default function PostingDetailPage() {
     const [introType, setIntroType] = useState<'TYPE_A' | 'TYPE_B'>('TYPE_A');
     const [questions, setQuestions] = useState<string[]>([]);
 
+    // Exam Config
+    const [selectedTestId, setSelectedTestId] = useState<string>('');
+    const [activeTests, setActiveTests] = useState<{ id: string, title: string, type: string }[]>([]);
+
     useEffect(() => {
-        fetchPosting();
-    }, []);
+        const id = params?.id as string;
+        if (id) {
+            Promise.all([fetchPosting(id), fetchActiveTests()]).finally(() => setLoading(false));
+        }
+    }, [params?.id]);
 
-    async function fetchPosting() {
-        if (!params?.id) return;
-
-        const { data, error } = await supabase
-            .from('postings')
-            .select('*')
-            .eq('id', params.id as string)
-            .single();
-
-        if (error) {
-            toast.error('공고를 불러오지 못했습니다.');
+    async function fetchPosting(id: string) {
+        const res = await fetchPostingDetailAction(id);
+        if (!res.success || !res.data) {
+            toast.error(res.error || '공고를 불러오지 못했습니다.');
             router.push('/admin/postings');
             return;
         }
 
-        if (data) {
-            const p = data as any;
-            setTitle(p.title);
-            setDescription(p.description || '');
-            setIsActive(p.is_active);
-            setImageUrl(p.image_url || null);
+        const p = res.data as any;
+        setTitle(p.title);
+        setDescription(p.description || '');
+        setIsActive(p.is_active);
+        setImageUrl(p.image_url || null);
 
-            // Load Site Config
-            const config = p.site_config || { intro_type: 'TYPE_A', questions: [] };
-            setIntroType(config.intro_type || 'TYPE_A');
-            setQuestions(config.questions || []);
-            setSelectedTestId(config.test_id || '');
+        // Load Site Config
+        const config = p.site_config || { intro_type: 'TYPE_A', questions: [] };
+        setIntroType(config.intro_type || 'TYPE_A');
+        setQuestions(config.questions || []);
+        setSelectedTestId(config.test_id || '');
+    }
+
+    async function fetchActiveTests() {
+        const res = await fetchActiveTestsAction();
+        if (res.success && res.data) {
+            setActiveTests(res.data);
         }
-        setLoading(false);
     }
 
     async function handleSave() {
@@ -73,18 +83,16 @@ export default function PostingDetailPage() {
             test_id: selectedTestId
         };
 
-        const { error } = await (supabase.from('postings') as any)
-            .update({
-                title,
-                description,
-                is_active: isActive,
-                image_url: imageUrl,
-                site_config: siteConfig // Save JSONB
-            })
-            .eq('id', params.id as string);
+        const res = await updatePostingAction(params?.id as string, {
+            title,
+            description,
+            is_active: isActive,
+            image_url: imageUrl,
+            site_config: siteConfig
+        });
 
-        if (error) {
-            toast.error('저장 실패: ' + error.message);
+        if (!res.success) {
+            toast.error('저장 실패: ' + res.error);
         } else {
             toast.success('변경사항이 저장되었습니다!');
         }
@@ -94,13 +102,10 @@ export default function PostingDetailPage() {
     async function handleDelete() {
         if (!confirm('정말 이 채용 공고를 삭제하시겠습니까? (이 작업은 되돌릴 수 없습니다)')) return;
 
-        const { error } = await supabase
-            .from('postings')
-            .delete()
-            .eq('id', params.id as string);
+        const res = await deletePostingAction(params?.id as string);
 
-        if (error) {
-            toast.error('삭제 실패: ' + error.message);
+        if (!res.success) {
+            toast.error('삭제 실패: ' + res.error);
         } else {
             toast.success('공고가 삭제되었습니다.');
             router.push('/admin/postings');
@@ -113,7 +118,7 @@ export default function PostingDetailPage() {
         setIsUploading(true);
         const file = e.target.files[0];
         const fileExt = file.name.split('.').pop();
-        const fileName = `${params.id as string}-${Date.now()}.${fileExt}`;
+        const fileName = `${params?.id}-${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -144,32 +149,11 @@ export default function PostingDetailPage() {
         setQuestions(newQ);
     }
 
-    // Exam Config
-    const [selectedTestId, setSelectedTestId] = useState<string>('');
-    const [activeTests, setActiveTests] = useState<{ id: string, title: string, type: string }[]>([]);
-
-    useEffect(() => {
-        fetchActiveTests();
-    }, []);
-
-    async function fetchActiveTests() {
-        // Fetch only ACTIVE tests
-        const { data } = await supabase
-            .from('tests')
-            .select('id, title, type')
-            .eq('status', 'ACTIVE')
-            .order('created_at', { ascending: false });
-
-        if (data) {
-            setActiveTests(data);
-        }
-    }
-
     if (loading) {
         return <div className="p-12 text-center text-slate-500">로딩 중...</div>;
     }
 
-    const candidateLink = `${window.location.origin}/jobs/${params.id}/apply`;
+    const candidateLink = `${window.location.origin}/jobs/${params?.id}/apply`;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20">

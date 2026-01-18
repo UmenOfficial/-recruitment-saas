@@ -2,74 +2,14 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
+// Service Role Client for Admin Data Access (Bypassing RLS)
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-/**
- * Fetch Postings and User Status Securely
- */
-export async function fetchPostingsAndUserStatus() {
-    try {
-        const authSupabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                auth: {
-                    persistSession: false,
-                    autoRefreshToken: false,
-                    detectSessionInUrl: false,
-                }
-                // We need to pass the session, but since we are in a server action called from Client Component,
-                // we might not have the session easily unless passed or using cookies.
-                // However, 'createClient' above is Service Role. We can use that for data.
-                // For Auth User, we depend on the caller or use headers if using SSR.
-                // Let's assume we need to verify the user.
-                // Best practice: Use `createServerClient` with cookies, but for now we are using Service Role for data.
-                // We need to know WHO the user is. 
-                // The standard way in this project's server actions (so far) has been relying on the calling context 
-                // validation or assuming public/protected routes handle auth.
-                // BUT, for `auth.getUser()`, we need the user's token.
-                // In Server Actions, we can use `cookies()` to get the session if we use `createServerClient`.
-                // FOR SIMPLICITY and Consistency with previous `getUserSession` in community/actions:
-                // We'll rely on `supabase.auth.getUser()` if we had the cookie client.
-
-                // However, the Service Role client `supabase` defined at top has NO context of the user.
-                // We must NOT use `auth.getUser()` on the Service Role client without a token.
-
-                // Alternative: Pass nothing? 
-                // Actually, `fetchPostings` is public? No, Admin page.
-                // Let's stick to the pattern:
-                // 1. We assume the user is authenticated (Middleware protects /admin).
-                // 2. We use Service Role to fetch Admin Data.
-                // 3. To get the CURRENT user's ID to check roles, we need `createServerClient` flow 
-                //    OR rely on the client passing the ID (insecure).
-                //    OR use `import { cookies } from 'next/headers'` and make a scoped client.
-            }
-        );
-
-        // Wait, the previous actions (e.g. candidates/actions.ts) didn't check auth user inside?
-        // Let's check `candidates/actions.ts`.
-        // It fetches ALL data. It trusts the caller (Middleware protection).
-        // `fetchCandidatesList` just does `supabase.from...`.
-
-        // So for this Refactor:
-        // We will fetch ALL postings (Admin View).
-        // But we DO need to return the user's role/company for the UI logic.
-
-        // To safely get the current user in a Server Action:
-        // We really should use `createServerComponentClient` pattern or `cookies`.
-        // Let's try to use `cookies` from `next/headers` to get the authorized user ID via Supabase Auth.
-    } catch (e) {
-        // ...
-    }
-}
-
-// Re-defining with proper Auth Context
-import { cookies } from 'next/headers';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 // Helper to get User-Scoped Supabase Client (for Auth Check)
 async function createActionClient() {
@@ -83,7 +23,7 @@ async function createActionClient() {
                     return cookieStore.get(name)?.value;
                 },
                 set(name: string, value: string, options: CookieOptions) {
-                    // Server Actions can't set cookies easily in all cases, but mostly read needed here.
+                    // Server Actions: mostly read needed here.
                 },
                 remove(name: string, options: CookieOptions) {
                 },
@@ -125,7 +65,7 @@ export async function fetchAdminPostingsPageData() {
         return {
             success: true,
             data: {
-                userRole: userData?.role || 'USER', // Default to USER, do NOT auto-upgrade to SUPER_ADMIN
+                userRole: userData?.role || 'USER',
                 companyId: memberData?.company_id || null,
                 postings: postings || []
             }
@@ -170,6 +110,64 @@ export async function createPostingAction(title: string, companyId: string | nul
         revalidatePath('/admin/postings');
         return { success: true };
 
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function fetchPostingDetailAction(id: string) {
+    try {
+        const { data: posting, error } = await supabase
+            .from('postings')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        return { success: true, data: posting };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function fetchActiveTestsAction() {
+    try {
+        const { data: tests, error } = await supabase
+            .from('tests')
+            .select('id, title, type')
+            .neq('status', 'DRAFT')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return { success: true, data: tests };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updatePostingAction(id: string, updates: any) {
+    try {
+        const { error } = await supabase
+            .from('postings')
+            .update(updates)
+            .eq('id', id);
+
+        if (error) throw error;
+
+        revalidatePath(`/admin/postings/${id}`);
+        revalidatePath('/admin/postings');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deletePostingAction(id: string) {
+    try {
+        const { error } = await supabase.from('postings').delete().eq('id', id);
+        if (error) throw error;
+        revalidatePath('/admin/postings');
+        return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
     }

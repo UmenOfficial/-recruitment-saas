@@ -1,0 +1,33 @@
+# Project Rules & Technology Stack
+
+## 1. Technology Stack
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS v4 (No custom CSS unless absolutely necessary)
+- **Database / Auth**: Supabase (@supabase/ssr ^0.8.0)
+  - **Auth**: Use `createBrowserClient` (client) and `createServerClient` (server).
+  - **Strictly Forbidden**: `auth-helpers-nextjs` (Deprecated)
+- **Language**: TypeScript (Strict Mode)
+
+## 2. Core Logic & Architecture
+### Two-Layer Norm Architecture
+- **Layer 1 (Scale)**: Raw responses -> Scale Scores (Linear Sum)
+- **Layer 2 (Competency)**: Scale Scores -> Competency Scores (Weighted Average)
+- **Constraint**: The formulas in `lib/scoring.ts` are IMMUTABLE.
+  - Do not modify `calculatePersonalityScores` logic without explicit user approval.
+  - T-Score Formula: `50 + 10 * ((raw - mean) / std_dev)` (Must handle std_dev=0 case safely)
+- **Timezone**: All meaningful timestamps must be stored in UTC and displayed in user's local time (or KST if specified).
+
+## 3. Orchestration Policy (Agent Behavior)
+- **Planning First**: Before any code modification, YOU MUST create or update `implementation_plan.md`.
+  - Proposed changes must be reviewed by the user (or Antigravity) before execution.
+- **Terminal Protection**:
+  - DANGEROUS COMMANDS: `npm install`, `npx supabase db reset`, `rm -rf`.
+  - REQUIRE APPROVAL: These commands must be explicitly approved by such logic or user interaction.
+- **Context Awareness**:
+  - Read `AGENTS.md` immediately upon start.
+  - Check `walkthrough.md` for recent changes.
+
+## 4. Coding Standards
+- **Server Actions**: Use `use server` at the top of the file.
+- **RLS Bypassing**: Only use `SUPABASE_SERVICE_ROLE_KEY` in Server Actions for administrative tasks. Never expose it to the client.
+- **Type Safety**: No `any`. Use interfaces/types defined in `types/` or generate them via `npm run sync-db`.

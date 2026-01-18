@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@supabase/supabase-js';
 
 export async function getUserSession() {
     const supabase = await createServerSupabaseClient();
@@ -17,7 +18,6 @@ export async function getUserSession() {
 export async function fetchPosts(category?: string) {
     // Use Service Role to bypass RLS for Comment Counts
     // (Regular client hides comment counts for Anon users on Secret posts)
-    const { createClient } = require('@supabase/supabase-js');
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -67,7 +67,6 @@ export async function fetchPostDetail(id: string) {
 
     // Increment View Count (Service Role)
     try {
-        const { createClient } = require('@supabase/supabase-js');
         const serviceClient = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -116,7 +115,6 @@ export async function fetchPostDetail(id: string) {
         // Fetch User Roles for Comments (Manually to bypass RLS/Relation issues)
         // Use Service Role to ensure we can read roles regardless of current user
         try {
-            const { createClient } = require('@supabase/supabase-js');
             const serviceSupabase = createClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
                 process.env.SUPABASE_SERVICE_ROLE_KEY!

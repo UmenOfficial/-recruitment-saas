@@ -600,7 +600,11 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
                             size="lg"
                             onClick={async () => {
                                 if (resultId) {
-                                    await supabase.from('test_results').delete().eq('id', resultId);
+                                    const { success, error } = await resetTestAction(resultId);
+                                    if (!success) {
+                                        toast.error("초기화 실패: " + error);
+                                        return;
+                                    }
                                 }
                                 router.push(`/candidate/personality/${testId}/practice`);
                             }}
