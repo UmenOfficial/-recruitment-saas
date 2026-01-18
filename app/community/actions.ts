@@ -86,7 +86,7 @@ export async function fetchPostDetail(id: string) {
     // Sort comments by created_at desc
     const safePost = post as any;
     if (safePost.comments && safePost.comments.length > 0) {
-        safePost.comments.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        safePost.comments.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
         // Fetch User Roles for Comments (Manually to bypass RLS/Relation issues)
         // Use Service Role to ensure we can read roles regardless of current user
