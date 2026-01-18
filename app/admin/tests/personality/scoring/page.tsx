@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/global-client';
 import { Save, AlertCircle, TrendingUp, Calculator, Calendar, ArrowRight, CheckCircle2, Circle, Clock, ChevronDown, ChevronUp, Check, Info } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchTestResultsForNorms, fetchTestsAction } from './actions';
+import { fetchNormTests, fetchScoringDetails, saveNorms, saveNormVersion, activateNormVersion, fetchTestResultsForNorms } from './actions';
 import { calculateTScore } from '@/lib/scoring';
 
 const GLOBAL_TEST_ID = '8afa34fb-6300-4c5e-bc48-bbdb74c717d8';
@@ -116,13 +116,14 @@ export default function PersonalityScoringManagement() {
     const fetchTests = async () => {
         try {
             setLoading(true);
-            const { data, error } = await fetchTestsAction(); // Use server action to bypass RLS
+            const res = await fetchNormTests();
 
-            if (error) throw error;
-            setTests(data || []);
-            setTests(data || []);
+            if (!res.success) throw new Error(res.error);
+            const data = res.data || [];
+
+            setTests(data);
             if (data && data.length > 0 && !selectedTestId) {
-                setSelectedTestId((data as any)[0].id);
+                setSelectedTestId(data[0].id);
             }
         } catch (error) {
             console.error(error);
@@ -134,39 +135,33 @@ export default function PersonalityScoringManagement() {
 
     const fetchTestDetails = async (testId: string) => {
         try {
-            const { data: qData, error: qError } = await supabase.from('test_questions').select('questions(category)').eq('test_id', testId);
-            if (qError) throw qError;
-            const cats = Array.from(new Set(qData.map((item: any) => item.questions?.category).filter(Boolean))) as string[];
-            setCategories(cats);
+            // Use Server Action
+            const res = await fetchScoringDetails(testId, GLOBAL_TEST_ID);
+            if (!res.success || !res.data) throw new Error(res.error);
 
-            const { data: cData, error: cError } = await supabase.from('competencies').select('name').eq('test_id', testId);
-            if (cError) throw cError;
-            const comps = cData.map((c: any) => c.name);
-            setCompetencies(comps);
+            const { categories, competencies, norms, versions } = res.data;
 
+            setCategories(categories);
+            setCompetencies(competencies);
 
+            // Sorting Logic (Moved from server action or kept here if raw data returned)
+            const sortedVersions = (versions || []).sort((a: any, b: any) => {
+                const aActive = a.is_active ? 1 : 0;
+                const bActive = b.is_active ? 1 : 0;
+                if (aActive !== bActive) return bActive - aActive;
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+            setVersions(sortedVersions);
 
-            // Fetch Local & Global Norms
-            const [localResult, globalResult] = await Promise.all([
-                supabase.from('test_norms').select('*').eq('test_id', testId),
-                supabase.from('test_norms').select('*').eq('test_id', GLOBAL_TEST_ID)
-            ]);
-
-            if (localResult.error) throw localResult.error;
-            // Global fetch error is non-critical, usually. But let's log.
-            if (globalResult.error) console.warn("Global norms fetch error", globalResult.error);
-
-            const nData = [...(localResult.data || []), ...(globalResult.data || [])];
-
-            const allKeys = Array.from(new Set(['TOTAL', ...cats, ...comps]));
+            const allKeys = Array.from(new Set(['TOTAL', ...categories, ...competencies]));
             const mergedNorms = allKeys.map(key => {
-                const existing = nData.find((n: any) =>
+                const existing = norms.find((n: any) =>
                     n.category_name === key ||
                     n.category_name === `Scale_${key}` ||
                     n.category_name === `Comp_${key}`
                 );
                 return existing || {
-                    test_id: key.startsWith('Comp_') || key === 'TOTAL' || comps.includes(key) ? testId : GLOBAL_TEST_ID, // Hint default ID
+                    test_id: key.startsWith('Comp_') || key === 'TOTAL' || competencies.includes(key) ? testId : GLOBAL_TEST_ID,
                     category_name: key,
                     mean_value: 0,
                     std_dev_value: 0
@@ -181,29 +176,9 @@ export default function PersonalityScoringManagement() {
     };
 
     const fetchVersions = async (testId: string) => {
-        try {
-            const { data, error } = await supabase
-                .from('test_norm_versions')
-                .select('*')
-                .eq('test_id', testId)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.warn('Versions table might not exist yet', error);
-                return;
-            }
-            // Sort active first
-            const sorted = (data || []).sort((a: any, b: any) => {
-                const aActive = a.is_active ? 1 : 0;
-                const bActive = b.is_active ? 1 : 0;
-                if (aActive !== bActive) return bActive - aActive; // True first
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            });
-            setVersions(sorted);
-
-        } catch (e) {
-            console.warn(e);
-        }
+        // Redundant as fetched in details, but kept for standalone refresh if needed
+        // For now, simpler to just re-call fetchTestDetails or ignore if covered.
+        // Let's rely on fetchTestDetails for full sync.
     }
 
     const handleCalculate = async (stage: 'SCALE' | 'COMPETENCY' | 'TOTAL') => {
@@ -503,11 +478,10 @@ export default function PersonalityScoringManagement() {
                 };
             });
 
-            const { error } = await supabase
-                .from('test_norms')
-                .upsert(newNorms as any, { onConflict: 'test_id, category_name' });
+            // Use Server Action
+            const { success, error } = await saveNorms(newNorms);
 
-            if (error) throw error;
+            if (!success) throw new Error(error);
 
             setNorms(prev => {
                 const statMap = new Map(newNorms.map(n => [n.category_name, n]));
@@ -528,32 +502,14 @@ export default function PersonalityScoringManagement() {
         if (!newVersionName.trim() || !selectedTestId) return;
         setSaving(true);
         try {
-            // New version: Insert as active: true? User said "decide which to active". 
-            // Usually saving current state means you want to keep this state.
-            // Let's insert as active=true, and flip others to false.
-
-            // 1. Insert
-            const { data: inserted, error } = await supabase.from('test_norm_versions').insert({
-                test_id: selectedTestId,
-                version_name: newVersionName,
-                active_norms_snapshot: norms,
-                is_active: true
-            } as any).select().single();
-
-            if (error) throw error;
-
-            // 2. Flip others (Manual workaround for no transaction)
-            if (inserted) {
-                await (supabase.from('test_norm_versions') as any)
-                    .update({ is_active: false })
-                    .eq('test_id', selectedTestId)
-                    .neq('id', (inserted as any).id);
-            }
+            // Use Server Action
+            const { success, error } = await saveNormVersion(selectedTestId, newVersionName, norms);
+            if (!success) throw new Error(error);
 
             toast.success(`버전 '${newVersionName}' 저장 및 활성화 완료`);
             setIsVersionModalOpen(false);
             setNewVersionName('');
-            fetchVersions(selectedTestId);
+            fetchTestDetails(selectedTestId); // Refresh versions list via details
         } catch (e: any) {
             console.error(e);
             toast.error('버전 저장 실패: ' + e.message);
@@ -567,22 +523,13 @@ export default function PersonalityScoringManagement() {
         if (version.is_active) return; // Already active
 
         try {
-            // 1. Update DB is_active flags
-            // Set all to false first
-            await (supabase.from('test_norm_versions') as any).update({ is_active: false }).eq('test_id', selectedTestId);
-            // Set target to true
-            await (supabase.from('test_norm_versions') as any).update({ is_active: true }).eq('id', version.id);
-
-            // 2. Restore Snapshot to test_norms
-
             // [Safeguard] Fetch Competencies to ensure correct prefixes for Legacy Snapshots
-            // [Safeguard] Fetch Competencies to ensure correct prefixes for Legacy Snapshots
-            const { data: currentComps } = await supabase
-                .from('competencies')
-                .select('name')
-                .eq('test_id', selectedTestId);
+            // We already have 'competencies' state from fetchDetails, can use that?
+            // Safer to use logic consistent with action or just pass needed info. 
+            // The logic in original code did complex normalization.
+            // Let's keep normalization logic here as it depends on `competencies` state which we have.
 
-            const compNames = new Set((currentComps as any[])?.map(c => c.name) || []);
+            const compNames = new Set(competencies);
 
             const normsToRestore = version.active_norms_snapshot.map(n => {
                 const name = n.category_name;
@@ -610,12 +557,10 @@ export default function PersonalityScoringManagement() {
                 };
             });
 
-            const { error } = await supabase.from('test_norms').upsert(
-                normsToRestore as any,
-                { onConflict: 'test_id, category_name' }
-            );
+            // Use Server Action
+            const { success, error } = await activateNormVersion(selectedTestId, version.id, normsToRestore);
 
-            if (error) throw error;
+            if (!success) throw new Error(error);
 
             toast.success(`'${version.version_name}' 버전이 활성화되었습니다.`);
 
@@ -623,7 +568,6 @@ export default function PersonalityScoringManagement() {
             if (viewVersion?.id === version.id) setViewVersion(prev => prev ? { ...prev, is_active: true } : null);
 
             fetchTestDetails(selectedTestId); // Sync current working norms
-            fetchVersions(selectedTestId); // Sync UI toggles
         } catch (e: any) {
             console.error(e);
             toast.error('활성화 실패: ' + e.message);

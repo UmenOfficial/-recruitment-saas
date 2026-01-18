@@ -1,331 +1,198 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 
-// We use the Service Role Key here to bypass RLS.
-// This is critical because "Norms" are calculated from ALL users' data,
-// but RLS typically prevents one user (even admin) from seeing other users' raw test results
-// unless an explicit policy exists.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export async function fetchTestResultsForNorms(targetTestId: string, sourceTestId: string, startDate: string, endDate: string) {
-    if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Supabase environment details missing for Service Role');
-    }
-
-    // [Security Fix] Authenticate User & Verify Role
-    // Since this action uses Service Role (Bypass RLS), we MUST verify the caller is an Admin.
-    const { createServerSupabaseClient } = await import('@/lib/supabase/server');
-    const authClient = await createServerSupabaseClient();
-    const { data: { session } } = await authClient.auth.getSession();
-
-    if (!session) {
-        throw new Error('Unauthorized: No active session');
-    }
-
-    // Check Role
-    const { data: userRole } = await (authClient
-        .from('users')
-        .select('role')
-        .eq('id', session.user.id)
-        .single() as any);
-
-    if (!userRole || (userRole.role !== 'SUPER_ADMIN' && userRole.role !== 'ADMIN')) {
-        throw new Error('Forbidden: Insufficient permissions');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    try {
-        // 0. [Auto-detect Source] Smart Fallback Logic
-        // If sourceTestId is same as targetTestId (default), check if we have enough data.
-        // If not, try to find a "Reference" test (e.g., Standard Personality Test).
-        let finalSourceTestId = sourceTestId;
-
-        if (targetTestId === sourceTestId) {
-            // Count results for this test first
-            const { count: currentCount } = await supabase
-                .from('test_results')
-                .select('*', { count: 'exact', head: true })
-                .eq('test_id', targetTestId)
-                .eq('attempt_number', 1);
-
-            console.log(`[Smart Fallback] Target: ${targetTestId}, Count: ${currentCount}`);
-
-            // If data is insufficient (e.g. < 30), look for Standard Test
-            if ((currentCount || 0) < 30) {
-                const { data: standardTests } = await supabase
-                    .from('tests')
-                    .select('id')
-                    .ilike('title', '%Standard%Personality%') // Search for Standard Personality Test
-                    .limit(1);
-
-                if (standardTests && standardTests.length > 0) {
-                    console.log(`[Smart Fallback] Switching Source to Standard Test: ${standardTests[0].id}`);
-                    finalSourceTestId = standardTests[0].id;
-                } else {
-                    console.log(`[Smart Fallback] No Standard Test found. Staying with Target.`);
-                }
-            }
-        } else {
-            console.log(`[Smart Fallback] Explicit Source Provided: ${sourceTestId}`);
-        }
-
-        // 1. [Target Metadata] Fetch Questions & Scales for TARGET Test
-        // We need to know which questions belong to the target test and their categories (scales)
-        const { data: targetQuestions, error: qError } = await supabase
-            .from('test_questions')
-            .select(`
-                question_id,
-                order_index,
-                questions (
-                    id,
-                    content,
-                    category,
-                    is_reverse_scored
-                )
-            `)
-            .eq('test_id', targetTestId);
-
-        if (qError) throw new Error(`Target Questions Error: ${qError.message}`);
-
-        // Map for quick lookup: QuestionID -> { category, isReversed }
-        const questionMap = new Map<string, { category: string, isReversed: boolean }>();
-        const targetQuestionIds = new Set<string>();
-
-        (targetQuestions || []).forEach((tq: any) => {
-            if (tq.questions) {
-                questionMap.set(tq.questions.id, {
-                    category: tq.questions.category,
-                    isReversed: tq.questions.is_reverse_scored || false
-                });
-                targetQuestionIds.add(tq.questions.id);
-            }
-        });
-
-        const totalTargetQuestions = targetQuestionIds.size;
-
-        // [Logic Update] If Source != Target, check mapping
-        // Prepare ID Mapper (Target ID -> Source ID)
-        // Default: Target ID maps to itself (assume self-mapping initially)
-        const targetToSourceIdMap = new Map<string, string>();
-        targetQuestionIds.forEach(id => targetToSourceIdMap.set(id, id));
-
-        if (finalSourceTestId !== targetTestId) {
-            console.log("[Norms Calc] Different Source Test detected. Mapping questions by text...");
-
-            // Fetch Source Questions for text matching
-            const { data: sourceQuestions, error: sqError } = await supabase
-                .from('test_questions')
-                .select(`
-                    question_id,
-                    questions ( id, content )
-                `)
-                .eq('test_id', finalSourceTestId);
-
-            if (sqError) throw new Error(`Source Questions Error: ${sqError.message}`);
-
-            // Build Text -> SourceID Map
-            const sourceTextMap = new Map<string, string>();
-            (sourceQuestions || []).forEach((sq: any) => {
-                if (sq.questions?.content) {
-                    // Normalize: remove spaces, lowercase
-                    const normalized = sq.questions.content.trim().replace(/\s+/g, '').toLowerCase();
-                    sourceTextMap.set(normalized, sq.questions.id);
-                }
-            });
-
-            // Update Mapping based on text match
-            let mappedCount = 0;
-            (targetQuestions || []).forEach((tq: any) => {
-                if (tq.questions?.content) {
-                    const normalized = tq.questions.content.trim().replace(/\s+/g, '').toLowerCase();
-                    const sourceId = sourceTextMap.get(normalized);
-                    if (sourceId) {
-                        targetToSourceIdMap.set(tq.questions.id, sourceId);
-                        mappedCount++;
-                    } else {
-                        // console.warn(`Mapping failed for: ${tq.questions.content}`);
-                    }
-                }
-            });
-            console.log(`[Norms Calc] Mapped ${mappedCount} / ${totalTargetQuestions} questions.`);
-        }
-
-        // 2. [Target Metadata] Fetch Competencies for TARGET Test
-        // We need to calculate competency scores based on scales
-        const { data: targetCompetencies, error: cError } = await supabase
-            .from('competencies')
-            .select(`
-                name,
-                competency_scales ( scale_name )
-            `)
-            .eq('test_id', targetTestId);
-
-        if (cError) throw new Error(`Target Competencies Error: ${cError.message}`);
-
-        // 3. [Source Data] Fetch Results from SOURCE Test
-        const { data: sourceResults, error: rError } = await supabase
-            .from('test_results')
-            .select('id, answers_log, user_id')
-            .eq('test_id', finalSourceTestId) // Use finalSourceTestId
-            .eq('attempt_number', 1)
-            .gte('completed_at', startDate + 'T00:00:00Z')
-            .lte('completed_at', endDate + 'T23:59:59Z');
-
-        if (rError) throw new Error(`Source Results Error: ${rError.message}`);
-
-        // 4. [Core Logic] Filter & Re-score
-        // We only include results that have answers for ALL target questions.
-        const validData: any[] = [];
-
-        (sourceResults || []).forEach((row: any) => {
-            const answers = row.answers_log || {};
-
-            // Check completeness using MAPPED IDs
-            let isComplete = true;
-            for (const targetQId of targetQuestionIds) {
-                const sourceQId = targetToSourceIdMap.get(targetQId);
-                // If not mapped (undefined) or no answer in source, invalid.
-                if (!sourceQId || answers[sourceQId] === undefined || answers[sourceQId] === null) {
-                    isComplete = false;
-                    break;
-                }
-            }
-            if (!isComplete) return;
-
-            // Re-score based on Target Metadata
-            const scaleScores: Record<string, number> = {};
-
-            // Calculate Scale Scores (Raw)
-            questionMap.forEach((meta, targetQId) => {
-                const sourceQId = targetToSourceIdMap.get(targetQId);
-                // We checked existence above, but sourceQId could be undefined if mapping failed.
-                if (!sourceQId) return;
-
-                let val = Number(answers[sourceQId]);
-                // Reverse Scoring
-                if (meta.isReversed) {
-                    val = 6 - val;
-                }
-
-                scaleScores[meta.category] = (scaleScores[meta.category] || 0) + val;
-            });
-
-            // Calculate Competency Scores (Raw Sum of specific scales)
-            const competencyScores: Record<string, number> = {};
-            let totalScore = 0;
-
-            (targetCompetencies || []).forEach((comp: any) => {
-                let compSum = 0;
-                comp.competency_scales.forEach((cs: any) => {
-                    compSum += (scaleScores[cs.scale_name] || 0);
-                });
-                competencyScores[comp.name] = compSum;
-                totalScore += compSum; // This might duplicate if scales are shared, but typically total is separate or sum of comps
-            });
-
-            // For Total Score, usually it's just sum of all scales or average T-score. 
-            // Here we just prepare 'detailed_scores' structure.
-            // But Norm Calculation Stage (next step in UI) expects 'detailed_scores' to have Scale/Comp structures.
-            // Actually, the UI calculates Norms based on THESE raw scores.
-
-            // Construct simulated detailed_scores
-            // The existing UI logic (handleCalculate) expects:
-            // detailed_scores: { 
-            //    [scale_name]: { raw: X, t_score: Y ... }, 
-            //    [comp_name]: { raw: X ... } 
-            // }
-            // But 'fetchTestResultsForNorms' is basically providing the RAW data pool.
-            // The UI will do the Mean/StdDev calc.
-            // So we just need to pass the RAW scores in a way the UI understands?
-            // Wait, the UI uses `row.detailed_scores[s.name].raw`.
-            // So we must Construct this object.
-
-            const simulatedDetailedScores: Record<string, any> = {
-                scales: {},
-                competencies: {}
-            };
-
-            // Fill Scales
-            for (const [scale, score] of Object.entries(scaleScores)) {
-                simulatedDetailedScores.scales[scale] = { raw: score };
-            }
-            // Fill Competencies
-            for (const [comp, score] of Object.entries(competencyScores)) {
-                simulatedDetailedScores.competencies[comp] = { raw: score };
-            }
-            // Fill Total (Global Raw)
-            // Just sum of all scales for safety? Or leave it to specific logic.
-            // Norm calc usually iterates Scales/Competencies defined in UI.
-
-            validData.push({
-                ...row,
-                detailed_scores: simulatedDetailedScores
-            });
-        });
-
-        console.log(`[Norms Calc] Target: ${targetTestId} (Q:${totalTargetQuestions}), Source: ${finalSourceTestId}, Fetched: ${sourceResults?.length}, Valid: ${validData.length}`);
-
-        return {
-            data: validData,
-            count: validData.length,
-            meta: {
-                competencies: targetCompetencies
-            }
-        };
-    } catch (e: any) {
-        console.error('Server Action Error:', e);
-        return { error: e.message };
-    }
-}
-
-export async function fetchTestsAction() {
-    console.log("--> fetchTestsAction called");
-    if (!supabaseUrl || !supabaseServiceKey) {
-        console.error("Missing Env Vars:", { url: !!supabaseUrl, key: !!supabaseServiceKey });
-        throw new Error('Supabase environment details missing for Service Role');
-    }
-
-    // [Security Fix] Authenticate User & Verify Role
-    const { createServerSupabaseClient } = await import('@/lib/supabase/server');
-    const authClient = await createServerSupabaseClient();
-    const { data: { session } } = await authClient.auth.getSession();
-
-    if (!session) {
-        throw new Error('Unauthorized: No active session');
-    }
-
-    const { data: userRole } = await (authClient
-        .from('users')
-        .select('role')
-        .eq('id', session.user.id)
-        .single() as any);
-
-    if (!userRole || (userRole.role !== 'SUPER_ADMIN' && userRole.role !== 'ADMIN')) {
-        throw new Error('Forbidden: Insufficient permissions');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
+/**
+ * Fetch all available Norm Tests (for list)
+ */
+export async function fetchNormTests() {
     try {
         const { data, error } = await supabase
             .from('tests')
-            .select('*')
-            .eq('type', 'PERSONALITY')
-            .neq('id', '8afa34fb-6300-4c5e-bc48-bbdb74c717d8') // Hide Global Placeholder
+            .select(`
+                id, 
+                title, 
+                type, 
+                created_at,
+                test_questions(count)
+            `)
+            .like('type', '%PERSONALITY%')
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('Fetch Tests Error:', error);
-            throw new Error(error.message);
-        }
-        console.log("--> fetchTestsAction details", data?.length, data);
+        if (error) throw error;
 
-        return { data };
-    } catch (e: any) {
-        console.error('Server Action Error:', e);
-        return { error: e.message };
+        return { success: true, data };
+    } catch (error: any) {
+        console.error('fetchNormTests Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Fetch details for a specific test for Scoring Page
+ * (Categories, Competencies, Norms, Versions)
+ */
+export async function fetchScoringDetails(testId: string, globalTestId: string) {
+    try {
+        // 1. Categories
+        const { data: qData, error: qError } = await supabase
+            .from('test_questions')
+            .select('questions(category)')
+            .eq('test_id', testId);
+
+        if (qError) throw qError;
+        const categories = Array.from(new Set(qData.map((item: any) => item.questions?.category).filter(Boolean))) as string[];
+
+        // 2. Competencies
+        const { data: cData, error: cError } = await supabase
+            .from('competencies')
+            .select('name')
+            .eq('test_id', testId);
+
+        if (cError) throw cError;
+        const competencies = cData.map((c: any) => c.name);
+
+        // 3. Norms (Local + Global)
+        const [localResult, globalResult] = await Promise.all([
+            supabase.from('test_norms').select('*').eq('test_id', testId),
+            supabase.from('test_norms').select('*').eq('test_id', globalTestId)
+        ]);
+
+        if (localResult.error) throw localResult.error;
+
+        // 4. Versions
+        const { data: vData, error: vError } = await supabase
+            .from('test_norm_versions')
+            .select('*')
+            .eq('test_id', testId)
+            .order('created_at', { ascending: false });
+
+        return {
+            success: true,
+            data: {
+                categories,
+                competencies,
+                norms: [...(localResult.data || []), ...(globalResult.data || [])],
+                versions: vData || []
+            }
+        };
+
+    } catch (error: any) {
+        console.error('fetchScoringDetails Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Upsert Norms (Approve Stage)
+ */
+export async function saveNorms(norms: any[]) {
+    try {
+        const { error } = await supabase
+            .from('test_norms')
+            .upsert(norms, { onConflict: 'test_id, category_name' });
+
+        if (error) throw error;
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Save New Norm Version
+ */
+export async function saveNormVersion(testId: string, versionName: string, normsSnapshot: any[]) {
+    try {
+        // 1. Insert
+        const { data: inserted, error } = await supabase.from('test_norm_versions').insert({
+            test_id: testId,
+            version_name: versionName,
+            active_norms_snapshot: normsSnapshot,
+            is_active: true
+        }).select().single();
+
+        if (error) throw error;
+
+        // 2. Flip others
+        if (inserted) {
+            await supabase.from('test_norm_versions')
+                .update({ is_active: false })
+                .eq('test_id', testId)
+                .neq('id', inserted.id);
+        }
+
+        revalidatePath('/admin/tests/personality/scoring');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Activate Norm Version
+ */
+export async function activateNormVersion(testId: string, versionId: string, normsToRestore: any[]) {
+    try {
+        // 1. Update DB is_active flags
+        await supabase.from('test_norm_versions').update({ is_active: false }).eq('test_id', testId);
+        await supabase.from('test_norm_versions').update({ is_active: true }).eq('id', versionId);
+
+        // 2. Restore Snapshot to test_norms
+        const { error } = await supabase.from('test_norms').upsert(
+            normsToRestore,
+            { onConflict: 'test_id, category_name' }
+        );
+
+        if (error) throw error;
+
+        revalidatePath('/admin/tests/personality/scoring');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Fetch Test Results for Norm Calculation (Original Action Enhancement)
+ */
+export async function fetchTestResultsForNorms(testId: string, sourceTestId: string, startDate: string, endDate: string) {
+    try {
+        // Build query
+        let query = supabase
+            .from('test_results')
+            .select(`
+                id, total_score, detailed_scores, completed_at, 
+                test_id
+            `)
+            .eq('test_id', sourceTestId) // Use source
+            .not('detailed_scores', 'is', null) // Must have scores
+            .gte('completed_at', `${startDate}T00:00:00`)
+            .lte('completed_at', `${endDate}T23:59:59`);
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Fetch Metadata (Competencies) for the TARGET test to know structure
+        const { data: compData } = await supabase
+            .from('competencies')
+            .select(`id, name, competency_scales(scale_name)`)
+            .eq('test_id', testId);
+
+        return {
+            data,
+            count: data?.length || 0,
+            meta: { competencies: compData },
+            error: null
+        };
+
+    } catch (error: any) {
+        return { data: null, count: 0, meta: null, error: error.message };
     }
 }

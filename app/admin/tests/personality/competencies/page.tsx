@@ -11,6 +11,7 @@ const supabase = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 ) as SupabaseClient<Database>;
+import { fetchPersonalityTests, fetchCompetencyDetails, saveCompetency, deleteCompetency } from './actions';
 import { Loader2, Plus, Save, Trash2, GripVertical, ChevronRight, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,12 +49,12 @@ export default function CompetencyPage() {
     });
 
     useEffect(() => {
-        fetchTests();
+        loadTestList();
     }, []);
 
     useEffect(() => {
         if (selectedTestId) {
-            fetchTestDetails(selectedTestId);
+            loadTestDetails(selectedTestId);
         } else {
             setAvailableScales([]);
             setCompetencies([]);
@@ -61,81 +62,33 @@ export default function CompetencyPage() {
         }
     }, [selectedTestId]);
 
-    const fetchTests = async () => {
-        const { data, error } = await supabase
-            .from('tests')
-            .select('id, title, type, status')
-            .neq('id', '8afa34fb-6300-4c5e-bc48-bbdb74c717d8') // Hide Global Placeholder
-            .order('created_at', { ascending: false }) as any;
-
-        if (error) {
-            console.error('Error fetching tests:', error);
-            toast.error('검사 목록을 불러오지 못했습니다.');
-            return;
-        }
-
-        console.log('Fetched tests:', data);
-        if (data) {
-            const personalityTests = data.filter((t: any) => t.type && t.type.includes('PERSONALITY'));
-            console.log('Filtered Personality Tests:', personalityTests);
-            setTests(personalityTests);
-
-            // Auto-select if there's only one or just to be helpful
-            if (personalityTests.length > 0 && !selectedTestId) {
-                setSelectedTestId(personalityTests[0].id);
+    const loadTestList = async () => {
+        setLoading(true);
+        const res = await fetchPersonalityTests();
+        if (res.success && res.data) {
+            setTests(res.data);
+            if (res.data.length > 0 && !selectedTestId) {
+                setSelectedTestId(res.data[0].id);
             }
+        } else {
+            console.error(res.error);
+            toast.error('검사 목록을 불러오지 못했습니다.');
         }
         setLoading(false);
-    };
+    }
 
-    const fetchTestDetails = async (testId: string) => {
+    const loadTestDetails = async (testId: string) => {
         setLoading(true);
-        try {
-            const { count } = await supabase.from('test_questions').select('*', { count: 'exact', head: true }).eq('test_id', testId) as any;
+        const res = await fetchCompetencyDetails(testId);
 
-            let categories: string[] = [];
-
-            if (count && count > 0) {
-                const { data: testQs } = await supabase
-                    .from('test_questions')
-                    .select('questions(category)')
-                    .eq('test_id', testId) as any;
-
-                categories = Array.from(new Set(testQs?.map((t: any) => t.questions?.category).filter(Boolean) || []));
-            } else {
-                const { data: allQs } = await supabase.from('questions').select('category').eq('type', 'PERSONALITY') as any;
-                categories = Array.from(new Set(allQs?.map((q: any) => q.category).filter(Boolean) || []));
-            }
-
-            setAvailableScales(categories.sort());
-
-            const { data: comps } = await supabase
-                .from('competencies')
-                .select(`
-                    id, 
-                    name, 
-                    description, 
-                    competency_scales(scale_name)
-                `)
-                .eq('test_id', testId)
-                .order('created_at', { ascending: true }) as any;
-
-            if (comps) {
-                const formatted = comps.map((c: any) => ({
-                    id: c.id,
-                    name: c.name,
-                    description: c.description || '',
-                    scales: c.competency_scales.map((cs: any) => cs.scale_name)
-                }));
-                setCompetencies(formatted);
-            }
-
-        } catch (e) {
-            console.error(e);
+        if (res.success && res.data) {
+            setAvailableScales(res.data.availableScales);
+            setCompetencies(res.data.competencies);
+        } else {
+            console.error(res.error);
             toast.error('데이터를 불러오는 중 오류가 발생했습니다.');
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
     // --- Actions ---
@@ -158,61 +111,36 @@ export default function CompetencyPage() {
         if (!selectedTestId) return;
         if (!formData.name.trim()) return toast.error('역량명을 입력해주세요.');
 
-        try {
-            let compId = editingCompetencyId;
+        // Use Server Action
+        const res = await saveCompetency(
+            selectedTestId,
+            editingCompetencyId || 'NEW', // Fallback just in case
+            formData.name,
+            formData.description,
+            formData.scales
+        );
 
-            if (editingCompetencyId === 'NEW') {
-                const { data, error } = await (supabase
-                    .from('competencies') as any)
-                    .insert({
-                        test_id: selectedTestId,
-                        name: formData.name,
-                        description: formData.description
-                    })
-                    .select()
-                    .single();
-
-                if (error) throw error;
-                compId = data.id;
-            } else {
-                const { error } = await (supabase
-                    .from('competencies') as any)
-                    .update({
-                        name: formData.name,
-                        description: formData.description
-                    })
-                    .eq('id', editingCompetencyId); // Correct variable name
-
-                if (error) throw error;
-            }
-
-            if (compId && compId !== 'NEW') {
-                await supabase.from('competency_scales').delete().eq('competency_id', compId) as any;
-
-                if (formData.scales.length > 0) {
-                    const mapped = formData.scales.map(s => ({
-                        competency_id: compId,
-                        scale_name: s
-                    }));
-                    // Fix never type error on insert
-                    await (supabase.from('competency_scales') as any).insert(mapped);
-                }
-            }
-
+        if (res.success) {
             toast.success('저장되었습니다.');
             setEditingCompetencyId(null);
-            fetchTestDetails(selectedTestId);
-
-        } catch (e: any) {
-            toast.error('저장 실패: ' + e.message);
+            loadTestDetails(selectedTestId);
+        } else {
+            toast.error('저장 실패: ' + res.error);
         }
     };
 
     const handleDelete = async (id: string) => {
         if (!confirm('정말 삭제하시겠습니까?')) return;
-        await supabase.from('competencies').delete().eq('id', id) as any;
-        toast.success('삭제되었습니다.');
-        fetchTestDetails(selectedTestId);
+
+        // Use Server Action
+        const res = await deleteCompetency(id);
+
+        if (res.success) {
+            toast.success('삭제되었습니다.');
+            loadTestDetails(selectedTestId);
+        } else {
+            toast.error('삭제 실패: ' + res.error);
+        }
     };
 
     // --- Drag & Drop Handlers ---

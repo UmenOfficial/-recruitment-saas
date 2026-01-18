@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/global-client';
+import { fetchAptitudeTestsAction, createAptitudeTestAction, updateAptitudeTestAction, deleteAptitudeTestAction } from './actions';
 import { Plus, Search, FileText, Clock, ChevronRight, MoreVertical, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -34,27 +35,17 @@ export default function AptitudeTestManagement() {
     }, []);
 
     const fetchTests = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            // Fetch tests
-            const { data: testsData, error } = await supabase
-                .from('tests')
-                .select('*, test_questions(count)')
-                .eq('type', 'APTITUDE')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            // Map count
-            const formatted = testsData.map((t: any) => ({
-                ...t,
-                question_count: t.test_questions?.[0]?.count || 0
-            }));
-
-            setTests(formatted);
+            const res = await fetchAptitudeTestsAction();
+            if (res.success) {
+                setTests(res.data || []);
+            } else {
+                toast.error('검사 목록 로딩 실패: ' + res.error);
+            }
         } catch (error) {
             console.error(error);
-            toast.error('검사 목록을 불러오는데 실패했습니다.');
+            toast.error('오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
@@ -62,27 +53,20 @@ export default function AptitudeTestManagement() {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!newTest.title.trim()) return toast.error('검사명을 입력해주세요.');
+
         try {
-            if (!newTest.title.trim()) return toast.error('검사명을 입력해주세요.');
-
-            const { error } = await (supabase
-                .from('tests') as any)
-                .insert({
-                    title: newTest.title,
-                    description: newTest.description,
-                    time_limit: newTest.time_limit,
-                    type: 'PERSONALITY',
-                    status: 'DRAFT'
-                });
-
-            if (error) throw error;
-
-            toast.success('새로운 검사가 생성되었습니다.');
-            setIsCreateModalOpen(false);
-            setNewTest({ title: '', description: '', time_limit: 60 });
-            fetchTests(); // Refresh
+            const res = await createAptitudeTestAction(newTest.title, newTest.description, newTest.time_limit);
+            if (res.success) {
+                toast.success('새로운 검사가 생성되었습니다.');
+                setIsCreateModalOpen(false);
+                setNewTest({ title: '', description: '', time_limit: 60 });
+                fetchTests();
+            } else {
+                toast.error("생성 실패: " + res.error);
+            }
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error('오류가 발생했습니다.');
         }
     };
 
@@ -90,40 +74,43 @@ export default function AptitudeTestManagement() {
         if (!confirm('정말 삭제하시겠습니까? 관련 데이터가 모두 삭제됩니다.')) return;
 
         try {
-            const { error } = await supabase.from('tests').delete().eq('id', id);
-            if (error) throw error;
-            toast.success('검사가 삭제되었습니다.');
-            fetchTests();
+            const res = await deleteAptitudeTestAction(id);
+            if (res.success) {
+                toast.success('검사가 삭제되었습니다.');
+                fetchTests();
+            } else {
+                toast.error("삭제 실패: " + res.error);
+            }
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error('오류가 발생했습니다.');
         }
     };
 
     const [editingTest, setEditingTest] = useState<Test | null>(null);
 
-    // ... existing handleCreate ...
+    // ... existing handleCreate (removed duplicate in replacement) ...
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingTest || !editingTest.title.trim()) return;
 
         try {
-            const { error } = await (supabase
-                .from('tests') as any)
-                .update({
-                    title: editingTest.title,
-                    description: editingTest.description,
-                    time_limit: editingTest.time_limit
-                })
-                .eq('id', editingTest.id);
+            const res = await updateAptitudeTestAction(
+                editingTest.id,
+                editingTest.title,
+                editingTest.description,
+                editingTest.time_limit
+            );
 
-            if (error) throw error;
-
-            toast.success('검사 정보가 수정되었습니다.');
-            setEditingTest(null);
-            fetchTests();
+            if (res.success) {
+                toast.success('검사 정보가 수정되었습니다.');
+                setEditingTest(null);
+                fetchTests();
+            } else {
+                toast.error("수정 실패: " + res.error);
+            }
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error('오류가 발생했습니다.');
         }
     };
 

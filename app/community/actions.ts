@@ -65,7 +65,32 @@ export async function fetchPosts(category?: string) {
 export async function fetchPostDetail(id: string) {
     const supabase = await createServerSupabaseClient();
 
-    // Increment View Count (Skip for now as it requires RPC or RLS bypass)
+    // Increment View Count (Service Role)
+    try {
+        const { createClient } = require('@supabase/supabase-js');
+        const serviceClient = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        // Get current count first to avoid race conditions with atomic update if possible, 
+        // but standard update is fine for now. 
+        // We use rpc if available, but fallback to select-update.
+        const { data: current } = await serviceClient
+            .from('posts')
+            .select('view_count')
+            .eq('id', id)
+            .single();
+
+        if (current) {
+            await serviceClient
+                .from('posts')
+                .update({ view_count: (current.view_count || 0) + 1 })
+                .eq('id', id);
+        }
+    } catch (e) {
+        console.error('Failed to increment view count:', e);
+    }
 
     const { data: post, error } = await supabase
         .from('posts')

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/global-client';
+import { fetchAdminPostingsPageData, createPostingAction } from './actions';
 import { Plus, Briefcase, Calendar, MoreHorizontal, Loader2 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 
@@ -33,52 +34,22 @@ export default function PostingsPage() {
 
     async function fetchUserCompanyAndPostings() {
         setLoading(true);
+        try {
+            const res = await fetchAdminPostingsPageData();
 
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (user) {
-            // 1. Fetch User Role
-            const { data: userData } = await supabase
-                .from('users')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-
-            if (userData) {
-                setUserRole((userData as any).role);
+            if (res.success && res.data) {
+                setUserRole(res.data.userRole);
+                setCompanyId(res.data.companyId);
+                setPostings(res.data.postings);
             } else {
-                // [SELF-HEALING] If user missing in public.users, create it as SUPER_ADMIN
-                const { error: insertError } = await (supabase.from('users') as any).insert({
-                    id: user.id,
-                    email: user.email,
-                    role: 'SUPER_ADMIN',
-                    full_name: 'Auto Admin',
-                    is_active: true
-                });
-
-                if (!insertError) {
-                    setUserRole('SUPER_ADMIN');
-                    toast.success('관리자 계정이 자동으로 초기화되었습니다.');
-                } else {
-                    toast.error('계정 초기화 실패: ' + insertError.message);
-                }
+                toast.error('데이터 로딩 실패: ' + res.error);
             }
-
-            // 2. Fetch Company ID (if exists)
-            const { data: memberData } = await supabase
-                .from('company_members')
-                .select('company_id')
-                .eq('user_id', user.id)
-                .single();
-
-            if (memberData) {
-                setCompanyId((memberData as any).company_id);
-            }
+        } catch (error) {
+            console.error(error);
+            toast.error('오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
         }
-
-        const { data } = await supabase.from('postings').select('*').order('created_at', { ascending: false });
-        setPostings(data || []);
-        setLoading(false);
     }
 
     async function handleCreate() {
@@ -93,22 +64,23 @@ export default function PostingsPage() {
             return;
         }
 
-        setIsCreating(true); // Use isCreating for button state
-        const { error } = await (supabase.from('postings') as any).insert({
-            title,
-            company_id: companyId, // can be null if SUPER_ADMIN (global posting)
-            jds: "{}",
-            is_active: true
-        });
+        setIsCreating(true);
 
-        if (error) {
-            toast.error("공고 생성 실패: " + error.message);
-        } else {
-            toast.success("공고가 생성되었습니다.");
-            setTitle("");
-            fetchUserCompanyAndPostings(); // Refresh list
+        try {
+            const res = await createPostingAction(title, companyId);
+
+            if (res.success) {
+                toast.success("공고가 생성되었습니다.");
+                setTitle("");
+                fetchUserCompanyAndPostings(); // Refresh list
+            } else {
+                toast.error("공고 생성 실패: " + res.error);
+            }
+        } catch (error) {
+            toast.error("오류가 발생했습니다.");
+        } finally {
+            setIsCreating(false);
         }
-        setIsCreating(false); // Use isCreating for button state
     }
 
     return (

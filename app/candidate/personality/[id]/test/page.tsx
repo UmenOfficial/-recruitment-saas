@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, use, useRef, useCallback } from "react";
 import { ArrowLeft, ArrowRight, Check, Clock, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase/global-client";
+import { initializeTest as initializeTestAction, saveProgressAction, resetTestAction, submitTestAction } from "./actions";
 import { toast } from "sonner";
 import { calculatePersonalityScores } from "@/lib/scoring";
 import { useRouter } from "next/navigation";
@@ -56,33 +57,17 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
     // Save Progress Function (Reads from Refs)
     const saveProgress = useCallback(async (isUrgent = false) => {
         const rId = resultIdRef.current;
-        if (!rId) {
-            console.log("Skipping save: No resultId");
-            return;
-        }
+        if (!rId) return;
 
-        const payload = {
-            elapsed_seconds: elapsedSecondsRef.current,
-            current_index: currentIndexRef.current,
-            answers_log: answersRef.current,
-            updated_at: new Date().toISOString()
-        };
-
-        console.log("Saving progress...", payload);
+        console.log("Saving progress...");
 
         try {
-            // Fix: Cast payload to any to avoid typescript 'never' error
-            const { error, count } = await (supabase.from('test_results') as any)
-                .update(payload)
-                .eq('id', rId)
-                .select(); // Select to verify return
-
-            if (error) {
-                console.error("Save error:", error);
-                toast.error(`저장 실패: ${error.message}`);
-            } else {
-                console.log("Save success");
-            }
+            await saveProgressAction(
+                rId,
+                currentIndexRef.current,
+                answersRef.current,
+                elapsedSecondsRef.current
+            );
         } catch (e) {
             console.error('Save failed', e);
         }
@@ -96,13 +81,11 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         };
 
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            // [MODIFIED] 로그아웃 진행 중이면 경고 팝업 스킵
             if (sessionStorage.getItem('is_logout_process') === 'true') {
                 return;
             }
 
             saveProgress(true);
-            const confirmationMessage = '검사를 중단하시겠습니까?';
             e.preventDefault();
             e.returnValue = '';
         };
@@ -114,14 +97,12 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         return () => {
             window.removeEventListener('popstate', handlePopState);
             window.removeEventListener('beforeunload', handleBeforeUnload);
-            // Ensure save on unmount (e.g. navigation away/logout)
             saveProgress(true);
         };
     }, [saveProgress]);
 
     // 2. Initial Fetch
     useEffect(() => {
-        // [MODIFIED] 진입 시 로그아웃 플래그 초기화
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem('is_logout_process');
         }
@@ -150,14 +131,12 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
             setElapsedSeconds(prev => {
                 const newValue = prev + 1;
 
-                // Timeout Check
                 if (timeLimitMinutes && newValue >= timeLimitMinutes * 60) {
                     stopTimer();
                     setShowTimeoutDialog(true);
-                    // Do not increment further or save normal progress if timed out?
-                    // Actually we should let it hit the limit value.
                 }
 
+                // Auto-save every 5 seconds
                 if (newValue % 5 === 0) {
                     saveProgress();
                 }
@@ -172,223 +151,47 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
             timerRef.current = null;
         }
     };
-
     const initializeTest = async () => {
         try {
-            console.log(`[Init] Starting initialization for testId: ${testId}`);
             setLoading(true);
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                console.warn('[Init] No user found, redirecting to login');
-                toast.error('로그인이 필요합니다.');
-                router.push('/login');
+            console.log(`[Init] Starting initialization for testId: ${testId}`);
+
+            const res = await initializeTestAction(testId);
+
+            if (!res.success || !res.data) {
+                if (res.redirect) router.push(res.redirect);
+                else {
+                    toast.error(res.error || '초기화 실패');
+                }
                 return;
             }
-            console.log(`[Init] User authenticated: ${user.id}`);
 
-            // A. Fetch Test Info
-            console.log('[Init] Step A: Fetching test info...');
-            const { data: testData, error: tError } = await supabase
-                .from('tests')
-                .select('time_limit')
-                .eq('id', testId)
-                .single();
+            const { test, questions: initQuestions, result, isResumed } = res.data;
 
-            if (tError) {
-                console.error('[Init] Step A Failed:', tError);
-                throw tError;
-            }
-            console.log('[Init] Step A Success:', testData);
+            // Set Time Limit
+            if (test.time_limit) setTimeLimitMinutes(test.time_limit);
 
-            // Fix: Cast testData to any
-            if ((testData as any).time_limit) setTimeLimitMinutes((testData as any).time_limit);
+            // Set Questions
+            setQuestions(initQuestions);
 
-            // B. Fetch Questions
-            console.log('[Init] Step B: Fetching questions...');
-            const { data: relations, error: rError } = await supabase
-                .from('test_questions')
-                .select('question_id, is_practice, questions(*)')
-                .eq('test_id', testId)
-                .order('order_index', { ascending: true });
-
-            if (rError) {
-                console.error('[Init] Step B Failed:', rError);
-                throw rError;
-            }
-            if (!relations || relations.length === 0) {
-                console.warn('[Init] Step B: No questions found');
-                toast.error('검사 문항이 없습니다.');
-                return;
-            }
-            console.log(`[Init] Step B Success: Found ${relations.length} relations`);
-
-            const allQuestionsRaw = relations.map((r: any) => ({
-                ...r.questions,
-                is_practice: r.is_practice // Map is_practice from joining table
-            }));
-
-            // Separate practice and real questions check
-            const practiceCheck = allQuestionsRaw.filter((q: any) => q.is_practice);
-            console.log(`[Init] Total Loaded: ${allQuestionsRaw.length}, Practice: ${practiceCheck.length}`);
-
-            // C. Check Existing Result
-            console.log('[Init] Step C: Checking existing result...');
-            const { data: existingResult, error: resError } = await supabase
-                .from('test_results')
-                .select('id, questions_order, elapsed_seconds, answers_log, current_index')
-                .eq('test_id', testId)
-                .eq('user_id', user.id)
-                .is('completed_at', null)
-                .maybeSingle();
-
-            if (resError) {
-                console.error("[Init] Step C Failed (Error fetching existing result):", resError);
-                toast.error(`이전 기록 조회 실패: ${resError.message}`);
-                throw resError;
+            if (isResumed && result) {
+                console.log('[Init] Resuming...', result);
+                setPendingResultData(result);
+                setShowResumeDialog(true);
+            } else if (result) {
+                console.log('[Init] New result started:', result.id);
+                setResultId(result.id);
             }
 
-            let finalQuestions = [];
-
-            console.log("[Init] Step C Result:", existingResult); // DEBUG
-
-            if (existingResult) {
-                // Fix: Cast existingResult to any
-                const res = existingResult as any;
-
-                // [MODIFIED] Do not restore immediately. Pending verification via Dialog.
-                // Instead of setting state here, we prepare pendingResultData.
-
-                // Restore order if exists
-                if (res.questions_order && Array.isArray(res.questions_order)) {
-                    const orderMap = new Map(res.questions_order.map((id: string, idx: number) => [id, idx]));
-                    finalQuestions = allQuestionsRaw.sort((a: any, b: any) => {
-                        const idxA = (orderMap.get(a.id) as number) ?? 9999;
-                        const idxB = (orderMap.get(b.id) as number) ?? 9999;
-                        return idxA - idxB;
-                    });
-                } else {
-                    finalQuestions = allQuestionsRaw;
-                }
-
-                // Check if there is actual progress
-                const hasProgress = res.current_index > 0 || (res.answers_log && Object.keys(res.answers_log).length > 0);
-
-                if (hasProgress) {
-                    console.log('[Init] Progress found, showing resume dialog');
-                    setPendingResultData(res);
-                    setShowResumeDialog(true);
-                } else {
-                    console.log('[Init] No progress found (fresh state), starting immediately');
-                    setResultId(res.id);
-                    // No need to set index/answers as they are 0/empty
-                }
-            } else {
-                console.log('[Init] Step C: No existing result, creating new one...');
-                // Separate practice and real questions
-                const practiceQuestions = allQuestionsRaw.filter((q: any) => q.is_practice);
-                const realQuestions = allQuestionsRaw.filter((q: any) => !q.is_practice);
-
-                console.log(`Found ${practiceQuestions.length} practice questions.`); // DEBUG
-
-                // Shuffle only real questions
-                const array = [...realQuestions];
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-
-                // Combine: Practice first, then shuffled Real
-                finalQuestions = [...practiceQuestions, ...array];
-
-                // [NEW] Get current max attempt_number to support multi-attempts
-                const { data: maxAttemptData, error: maxAttError } = await supabase
-                    .from('test_results')
-                    .select('attempt_number')
-                    .eq('test_id', testId)
-                    .eq('user_id', user.id)
-                    .order('attempt_number', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                if (maxAttError) console.error('[Init] Failed to fetch max attempt:', maxAttError);
-
-                const nextAttemptNumber = ((maxAttemptData as any)?.attempt_number || 0) + 1;
-                console.log(`[Init] Calculated next attempt_number: ${nextAttemptNumber} (Max found: ${(maxAttemptData as any)?.attempt_number ?? 'None'})`);
-
-                const { data: newResult, error: createError } = await supabase
-                    .from('test_results')
-                    .insert({
-                        test_id: testId,
-                        user_id: user.id,
-                        attempt_number: nextAttemptNumber,
-                        questions_order: finalQuestions.map(q => q.id),
-                        elapsed_seconds: 0,
-                        current_index: 0,
-                        answers_log: {},
-                        started_at: new Date().toISOString()
-                    } as any)
-                    .select()
-                    .single();
-
-                if (createError) {
-                    // Check for duplicate key error (23505) - Race condition handling
-                    if (createError.code === '23505') {
-                        console.warn('[Init] Duplicate key error (Race Condition?), retrieving existing result...');
-                        const { data: retryResult, error: retryError } = await supabase
-                            .from('test_results')
-                            .select('id, questions_order')
-                            .eq('test_id', testId)
-                            .eq('user_id', user.id)
-                            .order('created_at', { ascending: false }) // Get latest
-                            .limit(1)
-                            .maybeSingle();
-
-                        if (retryError || !retryResult) {
-                            console.error('[Init] Recovery failed:', retryError);
-                            // If recovery fails, it means we can't SELECT it.
-                            // But we know it exists (duplicate key).
-                            // This confirms RLS issue.
-                            throw createError;
-                        }
-
-                        console.log('[Init] Recovery success, using existing result:', (retryResult as any).id);
-                        setResultId((retryResult as any).id);
-
-                    } else {
-                        console.error('[Init] Create Result Failed:', createError);
-                        throw createError;
-                    }
-                } else {
-                    setResultId((newResult as any).id);
-                    console.log('[Init] New result created:', (newResult as any).id);
-                }
-            }
-
-            setQuestions(finalQuestions);
-            console.log('[Init] Initialization complete.');
         } catch (error: any) {
             console.error('Init failed:', error);
-            console.log('Init error details:', JSON.stringify(error, null, 2));
-            console.log('Error message:', error?.message);
-            console.log('Error code:', error?.code);
-            console.log('Error details:', error?.details);
-
-            const errorMsg = error?.message || JSON.stringify(error) || '알 수 없는 오류';
-            toast.error(`검사 초기화 실패: ${errorMsg}`);
+            toast.error(`검사 초기화 실패: ${error.message}`);
         } finally {
             setLoading(false);
         }
     };
 
-    const shuffleArray = (array: any[]) => {
-        let curId = array.length;
-        while (curId !== 0) {
-            const randId = Math.floor(Math.random() * curId);
-            curId -= 1;
-            [array[curId], array[randId]] = [array[randId], array[curId]];
-        }
-        return array;
-    };
+    // ... (shuffleArray removed - done on server) ...
 
     const handleResumeConfirm = async (shouldResume: boolean) => {
         setShowResumeDialog(false);
@@ -399,49 +202,26 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
             setCurrentIndex(pendingResultData.current_index || 0);
 
             if (pendingResultData.answers_log) {
+                // Ensure number keys
                 const restoredAnswers: Record<number, number> = {};
                 Object.entries(pendingResultData.answers_log).forEach(([k, v]) => {
                     restoredAnswers[parseInt(k)] = v as number;
                 });
                 setAnswers(restoredAnswers);
             }
-            // Resume timer
             startTimer();
         } else {
-            // Start fresh: Delete existing result to force new shuffle and new start
-            // Start fresh: Delete existing result to force new shuffle and new start
+            // Start fresh: Reset existing result logic on server
             if (pendingResultData?.id) {
-                const { error: delError } = await supabase.from('test_results').delete().eq('id', pendingResultData.id);
-
-                if (delError) {
-                    console.error("Delete failed, attempting soft reset:", delError);
-
-                    // Fallback: Update (Reset) instead of Delete
-                    const { error: resetError } = await (supabase.from('test_results') as any)
-                        .update({
-                            current_index: 0,
-                            answers_log: {},
-                            elapsed_seconds: 0,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', pendingResultData.id);
-
-                    if (resetError) {
-                        toast.error(`초기화 실패: ${resetError.message}`);
-                        return;
-                    }
-
-                    // Soft reset success: Redirect to practice page
-                    router.push(`/candidate/personality/${testId}/practice`);
+                const res = await resetTestAction(pendingResultData.id);
+                if (!res.success) {
+                    toast.error("초기화 실패: " + res.error);
                     return;
                 }
             }
-
-            // Delete Success: Redirect to practice page
+            // Redirect to practice or reload to re-init?
+            // Original logic diverted to practice page.
             router.push(`/candidate/personality/${testId}/practice`);
-
-            // No need to re-init here as we are leaving
-
         }
     };
 
@@ -449,51 +229,31 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         const newAnswers = { ...answers, [currentIndex]: score };
         setAnswers(newAnswers);
 
-        // Immediate save for reliability
+        // Immediate save
         if (resultId) {
-            try {
-                // Determine next index (if not last)
-                const nextIdx = currentIndex < questions.length ? currentIndex + 1 : currentIndex;
-
-                await (supabase.from('test_results') as any).update({
-                    current_index: nextIdx, // Save where they SHOULD be (next question)
-                    answers_log: newAnswers,
-                    updated_at: new Date().toISOString()
-                }).eq('id', resultId);
-            } catch (e) {
-                console.error("Save answer failed", e);
-            }
+            const nextIdx = currentIndex < questions.length ? currentIndex + 1 : currentIndex;
+            await saveProgressAction(resultId, nextIdx, newAnswers, elapsedSeconds);
         }
 
         if (currentIndex < questions.length) {
             setTimeout(() => {
                 const nextIdx = currentIndex + 1;
                 setCurrentIndex(nextIdx);
-            }, 250); // Keep UI delay for UX
+            }, 250);
         }
     };
 
     const nextQuestion = () => {
         if (answers[currentIndex] === undefined) {
-            toast.warning('문항에 응답하지 않았습니다.', {
-                description: '다음 문항으로 넘어가려면 답변을 선택해주세요.'
-            });
+            toast.warning('문항에 응답하지 않았습니다.');
             return;
         }
 
         if (currentIndex < questions.length) {
             const nextIdx = currentIndex + 1;
-            setCurrentIndex(nextIdx); // triggers re-render, ref update in effect
-
-            // Force save with latest data
+            setCurrentIndex(nextIdx);
             if (resultId) {
-                // Fix: Cast payload
-                // Fix: Cast payload
-                (supabase.from('test_results') as any).update({
-                    current_index: nextIdx,
-                    answers_log: answers,
-                    updated_at: new Date().toISOString()
-                }).eq('id', resultId).then();
+                saveProgressAction(resultId, nextIdx, answers, elapsedSeconds);
             }
         }
     };
@@ -511,8 +271,7 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         }
 
         if (!resultId) {
-            console.error("[Submit] Critical Error: No resultId found during submission.");
-            toast.error('제출을 위한 세션 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.');
+            toast.error('세션 오류');
             return;
         }
 
@@ -520,169 +279,37 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         stopTimer();
 
         try {
-            console.log("[Submit] Starting calculation", { testId, resultId, answersCount: Object.keys(answers).length });
+            // Need to convert answers (Index->Val) to ID->Val ?? 
+            // In my server action implementation I contemplated this.
+            // If I change server action to accept `answersLog` (Index->Val), I need `questions` ordered properly on server.
+            // My server action logic `submitTestAction`:
+            // 4. ... `answersMap[q.id] = answers[q.id]` <- This assumed Key=ID.
+            // BUT `answers` here is Index->Score.
+            // Questions are `questions`. `questions[index].id`.
 
-            // 1. Fetch All Norms for this test
-            const { data: norms, error: normError } = await supabase
-                .from('test_norms')
-                .select('category_name, mean_value, std_dev_value')
-                .eq('test_id', testId);
-
-            if (normError) {
-                console.error("[Submit] Error fetching norms:", normError);
-            }
-
-            const normMap: Record<string, { mean: number; stdDev: number }> = {};
-            (norms as any)?.forEach((n: any) => {
-                normMap[n.category_name] = {
-                    mean: Number(n.mean_value),
-                    stdDev: Number(n.std_dev_value)
-                };
-            });
-
-            // 2. Fetch Actual Competency Definitions for this test
-            const { data: competencyDefs, error: compError } = await supabase
-                .from('competencies')
-                .select(`
-                    id,
-                    name,
-                    competency_scales (
-                        scale_name
-                    )
-                `)
-                .eq('test_id', testId);
-
-            if (compError) {
-                console.error("[Submit] Error fetching competencies:", compError);
-            }
-
-            // 3. Prepare Data for Shared Scoring Logic
-            const scaleNorms = (norms as any)
-                ?.filter((n: any) => n.category_name.startsWith('Scale_'))
-                .map((n: any) => ({
-                    category_name: n.category_name.replace('Scale_', ''),
-                    mean_value: Number(n.mean_value),
-                    std_dev_value: Number(n.std_dev_value)
-                })) || [];
-
-            const competencyNorms = (norms as any)
-                ?.filter((n: any) => n.category_name.startsWith('Comp_'))
-                .map((n: any) => ({
-                    category_name: n.category_name.replace('Comp_', ''),
-                    mean_value: Number(n.mean_value),
-                    std_dev_value: Number(n.std_dev_value)
-                })) || [];
-
-            // If no prefixed norms found, try to use raw names (legacy support)
-            // But usually the new system uses prefixes.
-            if (scaleNorms.length === 0 && competencyNorms.length === 0) {
-                (norms as any)?.forEach((n: any) => {
-                    // Heuristic: if it looks like a competency name, put in comp?
-                    // Safer to just put everything in Scale if unsure, or duplicate?
-                    // For now, let's assume Prefixes are present if using new logic.
-                    // If not, maybe just map everything to ScaleNorms for safety?
-                    scaleNorms.push({
-                        category_name: n.category_name,
-                        mean_value: Number(n.mean_value),
-                        std_dev_value: Number(n.std_dev_value)
-                    });
-                });
-            }
-
-            const questionList = questions.map(q => ({
-                id: q.id,
-                category: q.category || '기타'
-            }));
-
-            const compList = (competencyDefs || []).map((c: any) => ({
-                name: c.name,
-                competency_scales: c.competency_scales
-            }));
-
-            // Prepare answers map (QID -> Value)
-            // answers is { [index]: score }. Need to map index -> Question ID
-            const answersMap: Record<string, number> = {};
+            // So we MUST Map here before sending.
+            const answersById: Record<string, number> = {};
             questions.forEach((q, idx) => {
-                const ans = answers[idx];
-                if (ans !== undefined) {
-                    // Check reverse scoring
-                    // The shared lib EXPECTS raw answer value? Or scored value?
-                    // lib/scoring.ts: "const score = typeof val === 'number' ? val : parseFloat(val);"
-                    // It sums these up.
-                    // So we must handle Reverse Scoring HERE if lib doesn't know about it.
-                    // lib definition: "questions: ScoringQuestion[]". ScoringQuestion { id, category }.
-                    // It does NOT have 'is_reverse_scored'.
-                    // So we must pass the FINAL SCORE (1-5) to the lib.
-
-                    const score = q.is_reverse_scored ? (6 - ans) : ans;
-                    answersMap[q.id] = score;
-                }
+                const score = answers[idx];
+                if (score !== undefined) answersById[q.id] = score;
             });
 
-            // 4. Calculate Scores
-            const calculated = calculatePersonalityScores(
-                answersMap,
-                questionList,
-                scaleNorms,
-                competencyNorms,
-                compList
-            );
+            const res = await submitTestAction(resultId, testId, answersById, elapsedSeconds);
 
-            console.log("[Submit] Calculated:", calculated);
-
-            const finalTScore = calculated.total.t_score;
-            const totalRawScore = calculated.raw_total; // This is sum of T-scores per logic
-
-            // 7. Build detailed_scores structure
-            const detailed_scores = calculated;
-
-            console.log("[Submit] Final scores to save:", detailed_scores);
-
-            // 8. Update Record in test_results
-            const payload = {
-                answers_log: answers,
-                elapsed_seconds: elapsedSeconds,
-                completed_at: new Date().toISOString(),
-                total_score: Math.round(finalTScore), // DB REQUIRES INTEGER
-                t_score: Math.round(finalTScore),     // DB REQUIRES INTEGER
-                detailed_scores: detailed_scores
-            };
-
-            const { error: updateError } = await (supabase.from('test_results') as any)
-                .update(payload)
-                .eq('id', resultId);
-
-            if (updateError) {
-                console.error("[Submit] Database Update Error (Object):", updateError);
-                console.error("[Submit] Database Update Error (Stringified):", JSON.stringify(updateError));
-                throw updateError;
-            }
-
-            toast.success('검사가 완료되었습니다.');
-
-            // [MODIFIED] Check if we are in sample mode
-            if (location.pathname.includes('/sample')) {
-                router.push('/sample/completed');
+            if (res.success) {
+                toast.success('검사가 완료되었습니다.');
+                if (location.pathname.includes('/sample')) {
+                    router.push('/sample/completed');
+                } else {
+                    router.push('/candidate/dashboard');
+                }
             } else {
-                router.push('/candidate/dashboard');
+                throw new Error(res.error);
             }
 
         } catch (error: any) {
             console.error("Submit error:", error);
-
-            // Extract details from error object manually in case JSON.stringify fails
-            const errDetails = {
-                message: error?.message || "No message",
-                code: error?.code,
-                details: error?.details,
-                hint: error?.hint,
-                stack: error?.stack
-            };
-
-            const errorMsg = error?.message || JSON.stringify(errDetails);
-            console.error("[Submit] Detailed breakdown:", errDetails);
-
-            toast.error(`제출 중 오류가 발생했습니다: ${errorMsg}`);
+            toast.error(`제출 중 오류: ${error.message}`);
             setIsSubmitting(false);
         }
     };

@@ -18,9 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Info } from 'lucide-react'; // Import Info icon for usage check
-
-// ... (existing imports match file content, ensure Info is imported)
-// NOTE: I will replace the imports line completely to include Info.
+import { fetchQuestionsAction, deleteQuestionAction } from './actions';
 
 export default function QuestionsPage() {
     const router = useRouter();
@@ -70,9 +68,19 @@ export default function QuestionsPage() {
 
     const fetchQuestions = async () => {
         setLoading(true);
-        const { data } = await supabase.from('questions').select('*').order('created_at', { ascending: false });
-        setQuestions(data || []);
-        setLoading(false);
+        try {
+            const res = await fetchQuestionsAction();
+            if (res.success) {
+                setQuestions(res.data || []);
+            } else {
+                toast.error('문항 목록 로딩 실패: ' + res.error);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -83,9 +91,18 @@ export default function QuestionsPage() {
         e.stopPropagation(); // Prevent row click
         if (!confirm('정말 삭제하시겠습니까?')) return;
 
-        await (supabase.from('questions') as any).delete().eq('id', id);
-        toast.success('삭제되었습니다.');
-        setQuestions(questions.filter(q => q.id !== id));
+        try {
+            const res = await deleteQuestionAction(id);
+            if (res.success) {
+                toast.success('삭제되었습니다.');
+                // Optimistic update or refetch
+                setQuestions(prev => prev.filter(q => q.id !== id));
+            } else {
+                toast.error('삭제 실패: ' + res.error);
+            }
+        } catch (error) {
+            toast.error('오류가 발생했습니다.');
+        }
     };
 
     const handleRowClick = (q: any) => {

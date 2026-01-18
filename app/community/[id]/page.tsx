@@ -117,61 +117,72 @@ export default async function PostDetailPage({
                     )}
 
                     {/* Text Content */}
-                    <div className={`prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-line ${!isLoggedIn && "blur-[2px] select-none opacity-60"}`}>
-                        {isLoggedIn ? post.content : post.content.slice(0, 50) + "\n\n(내용이 더 있습니다...)"}
-                        {!isLoggedIn && (
-                            // Fake Text for visual filler
-                            Array(5).fill(0).map((_, i) => (
-                                <p key={i} className="text-slate-300">
-                                    로그인하지 않은 사용자에게는 내용이 보이지 않습니다. 이 영역은 블러 처리된 텍스트입니다.
-                                    커뮤니티의 건전한 운영을 위해 로그인이 필요합니다.
-                                </p>
-                            ))
-                        )}
+                    <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-line">
+                        {post.content}
                     </div>
-
-                    {/* Login Overlay for Guest */}
-                    {!isLoggedIn && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/90 to-transparent flex flex-col items-center justify-center pt-20">
-                            <Lock size={48} className="text-indigo-200 mb-4" />
-                            <h3 className="text-xl font-bold text-slate-800 mb-2">로그인이 필요한 콘텐츠입니다</h3>
-                            <p className="text-slate-500 mb-6 text-center max-w-xs">
-                                전체 내용과 댓글을 확인하려면<br />로그인이 필요해요.
-                            </p>
-                            <Link href={`/login?next=/community/${id}`} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg hover:translate-y-[-2px] transition-all flex items-center gap-2">
-                                <LogIn size={20} />
-                                3초만에 로그인하기
-                            </Link>
-                        </div>
-                    )}
                 </div>
             )}
 
-            {/* Comments Section (Logged In Only) */}
-            {isLoggedIn && (
+            {/* Comments Section */}
+            {(!post.is_locked || isLoggedIn) && (
                 <div className="mt-8">
                     <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                         <MessageCircle className="text-indigo-600" />
                         댓글 <span className="text-indigo-600">{post.comments?.length || 0}</span>
                     </h3>
 
-                    {/* Comment List */}
-                    <CommentList
-                        comments={post.comments}
-                        postId={id}
-                        currentUserId={session?.user.id}
-                        isAdmin={isAdmin}
-                    />
+                    {isLoggedIn ? (
+                        <>
+                            {/* Comment List */}
+                            <CommentList
+                                comments={post.comments}
+                                postId={id}
+                                currentUserId={session?.user.id}
+                                isAdmin={isAdmin}
+                            />
 
-                    {/* Comment Form */}
-                    <CommentForm
-                        postId={id}
-                        isSecret={post.is_secret || post.category === 'QNA'}
-                        isAdmin={isAdmin}
-                        isAuthor={post.user_id === session?.user.id}
-                    />
+                            {/* Comment Form */}
+                            <CommentForm
+                                postId={id}
+                                isSecret={post.is_secret || post.category === 'QNA'}
+                                isAdmin={isAdmin}
+                                isAuthor={post.user_id === session?.user.id}
+                            />
+                            <p className="text-xs text-slate-400 mt-2 ml-2">* 건전한 소통을 위해 비방이나 욕설은 제한될 수 있습니다.</p>
+                        </>
+                    ) : (
+                        /* Blurred Comments Placeholder for Guests */
+                        <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden p-6">
+                            <div className="space-y-6 opacity-30 blur-sm select-none pointer-events-none" aria-hidden="true">
+                                {[1, 2].map((_, i) => (
+                                    <div key={i} className="flex gap-4">
+                                        <div className="w-10 h-10 bg-slate-200 rounded-full shrink-0" />
+                                        <div className="flex-1 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-20 h-4 bg-slate-200 rounded" />
+                                                <div className="w-12 h-3 bg-slate-100 rounded" />
+                                            </div>
+                                            <div className="w-full h-12 bg-slate-50 rounded" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
 
-                    <p className="text-xs text-slate-400 mt-2 ml-2">* 건전한 소통을 위해 비방이나 욕설은 제한될 수 있습니다.</p>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 z-10">
+                                <Lock size={32} className="text-indigo-300 mb-3" />
+                                <p className="text-slate-600 font-bold mb-4">
+                                    댓글은 로그인 후 확인할 수 있습니다
+                                </p>
+                                <Link
+                                    href={`/login?next=/community/${id}`}
+                                    className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm"
+                                >
+                                    <LogIn size={16} />
+                                    로그인하기
+                                </Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
