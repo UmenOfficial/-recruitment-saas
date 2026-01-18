@@ -31,6 +31,10 @@ interface Candidate {
     results: TestResult[];
 }
 
+import { fetchCandidatesList, fetchReportDetailAction, resetTestResultTime, deleteTestResult } from './actions';
+
+// ... (imports remain same)
+
 export default function CandidatesPage() {
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [loading, setLoading] = useState(true);
@@ -48,101 +52,41 @@ export default function CandidatesPage() {
     const [isManageOpen, setIsManageOpen] = useState(false);
 
     useEffect(() => {
-        fetchCandidates();
+        loadCandidates();
     }, []);
 
-    const fetchCandidates = async () => {
+    const loadCandidates = async () => {
         setLoading(true);
-        try {
-            const { data: users, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                // Removed role filter to show all users including Admins for testing
-                .order('created_at', { ascending: false })
-                .returns<any[]>();
-
-            if (userError) throw userError;
-
-            const userIds = users.map(u => u.id);
-            if (userIds.length === 0) {
-                setCandidates([]);
-                setLoading(false);
-                return;
-            }
-
-            const { data: results, error: resError } = await supabase
-                .from('test_results')
-                .select(`
-                    id, user_id, test_id, total_score, t_score, completed_at, attempt_number,
-                    tests ( title, type )
-                `)
-                .in('user_id', userIds)
-                .order('completed_at', { ascending: false }) // Latest first
-                .returns<any[]>();
-
-            if (resError) throw resError;
-
-            const formatted: Candidate[] = users.map(user => {
-                const userResults = results
-                    .filter(r => r.user_id === user.id)
-                    .map((r: any) => ({
-                        id: r.id,
-                        test_id: r.test_id,
-                        test_title: r.tests?.title,
-                        test_type: r.tests?.type,
-                        total_score: r.total_score,
-                        t_score: r.t_score,
-                        completed_at: r.completed_at,
-                        attempt_number: r.attempt_number ?? 1
-                    }));
-
-                return {
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.full_name,
-                    created_at: user.created_at,
-                    results: userResults
-                };
-            });
-
-            setCandidates(formatted);
-
-        } catch (error: any) {
-            console.error(error);
+        const result = await fetchCandidatesList();
+        if (result.success && result.data) {
+            setCandidates(result.data);
+        } else {
+            console.error(result.error);
             toast.error('지원자 목록을 불러오는데 실패했습니다.');
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
-    // Separate fetch function for logic reuse
     const fetchReportDetail = async (resultId: string) => {
         setLoadingReport(true);
         setReportData(null);
+
+        const res = await fetchReportDetailAction(resultId);
+
+        if (!res.success || !res.data) {
+            toast.error("리포트 데이터를 불러오는데 실패했습니다.");
+            setLoadingReport(false);
+            return;
+        }
+
+        const { result, competencies, questions, norms, history } = res.data;
+
         try {
-            const { data: result, error: rErr } = await supabase
-                .from("test_results")
-                .select(`
-                    id, total_score, completed_at, detailed_scores, answers_log, questions_order, test_id, user_id,
-                    tests ( id, title, type, description )
-                `)
-                .eq("id", resultId)
-                .single<any>();
-            if (rErr) throw rErr;
-
-            const [compRes, qRes, normsRes, historyRes] = await Promise.all([
-                supabase.from("competencies").select(`id, name, description, competency_scales(scale_name)`).eq("test_id", result.test_id),
-                supabase.from("test_questions").select('is_practice, questions(*)').eq('test_id', result.test_id),
-                supabase.from("test_norms").select('*').eq('test_id', result.test_id),
-                supabase.from("test_results").select('id, total_score, completed_at, detailed_scores, attempt_number')
-                    .eq("test_id", result.test_id).eq("user_id", result.user_id).order("completed_at", { ascending: true })
-            ]);
-
-            const normsMap = new Map((normsRes.data || []).map((n: any) => [n.category_name, n]));
+            const normsMap = new Map((norms || []).map((n: any) => [n.category_name, n]));
 
             const questionsMap: Record<string, any> = {};
             const practiceIds = new Set<string>();
-            qRes.data?.forEach((r: any) => {
+            questions?.forEach((r: any) => {
                 const q = Array.isArray(r.questions) ? r.questions[0] : r.questions;
                 if (q) {
                     questionsMap[q.id] = q;
@@ -152,10 +96,8 @@ export default function CandidatesPage() {
 
             const answers = (result.answers_log as Record<string, number>) || {};
 
-            // Fallback for qOrder if missing (e.g. seeded data)
             let rawQOrder = (result.questions_order as string[]) || [];
             if (rawQOrder.length === 0) {
-                // Use keys from questionsMap excluding practice
                 rawQOrder = Object.values(questionsMap)
                     .filter((q: any) => !practiceIds.has(q.id))
                     .map((q: any) => q.id);
@@ -163,8 +105,7 @@ export default function CandidatesPage() {
 
             const validQOrder = rawQOrder.filter((qid: string) => !practiceIds.has(qid));
 
-            // Populate trend data
-            const trendData = (historyRes.data || []).map((r: any, idx: number) => {
+            const trendData = (history || []).map((r: any, idx: number) => {
                 const detailedTotal = (r.detailed_scores as any)?.total;
                 let score = typeof detailedTotal === 'number' ? detailedTotal : detailedTotal?.t_score;
                 if (score === undefined || score === null) score = r.total_score || 0;
@@ -178,7 +119,7 @@ export default function CandidatesPage() {
 
             setReportData({
                 result,
-                competencies: compRes.data || [],
+                competencies: competencies || [],
                 questionsMap,
                 answers,
                 qOrder: validQOrder,
@@ -188,9 +129,7 @@ export default function CandidatesPage() {
 
         } catch (e) {
             console.error(e);
-            toast.error("리포트 데이터를 불러오는데 실패했습니다.");
-            // Don't close modal on error, let user see error state or retry?
-            // Usually keeping it open but empty or error message is better.
+            toast.error("리포트 처리 중 오류가 발생했습니다.");
         } finally {
             setLoadingReport(false);
         }
@@ -215,24 +154,14 @@ export default function CandidatesPage() {
             return;
         }
 
-        try {
-            const { error } = await (supabase
-                .from('test_results') as any)
-                .update({
-                    elapsed_seconds: 0,
-                    completed_at: null,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', selectedResultToManage.id);
+        const result = await resetTestResultTime(selectedResultToManage.id);
 
-            if (error) throw error;
-
-            toast.success('응시 시간이 초기화되었습니다. (수검자가 다시 접속하면 검사를 이어갈 수 있습니다.)');
+        if (result.success) {
+            toast.success('응시 시간이 초기화되었습니다.');
             setIsManageOpen(false);
-            fetchCandidates(); // Refresh list to reflect status change (though completed_at will be null now)
-        } catch (e: any) {
-            console.error(e);
-            toast.error(`초기화 실패: ${e.message}`);
+            loadCandidates();
+        } else {
+            toast.error(`초기화 실패: ${result.error}`);
         }
     };
 
@@ -243,20 +172,14 @@ export default function CandidatesPage() {
             return;
         }
 
-        try {
-            const { error } = await supabase
-                .from('test_results')
-                .delete()
-                .eq('id', selectedResultToManage.id);
+        const result = await deleteTestResult(selectedResultToManage.id);
 
-            if (error) throw error;
-
+        if (result.success) {
             toast.success('검사 기록이 삭제되었습니다.');
             setIsManageOpen(false);
-            fetchCandidates(); // Refresh list
-        } catch (e: any) {
-            console.error(e);
-            toast.error(`삭제 실패: ${e.message}`);
+            loadCandidates();
+        } else {
+            toast.error(`삭제 실패: ${result.error}`);
         }
     };
 
