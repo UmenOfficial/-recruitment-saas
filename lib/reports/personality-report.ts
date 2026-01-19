@@ -1,103 +1,135 @@
-import { DetailedScores, ScoringCompetency } from '../scoring';
-import { PersonalityReport, ReportLevel, CompetencyReport, ScaleReport } from '../../types/report';
+import {
+    calculatePersonalityScores,
+    ScoringQuestion,
+    ScoringNorm,
+    ScoringCompetency,
+    DetailedScores
+} from '@/lib/scoring';
+import { DeepDiveReport, ReportScore, ReportSection } from '@/types/report';
 
-/**
- * Maps a T-Score to a descriptive level.
- * @param tScore The T-Score (0-100)
- */
-export function getTScoreLevel(tScore: number): ReportLevel {
-  if (tScore >= 70) return 'Very High';
-  if (tScore >= 60) return 'High';
-  if (tScore >= 40) return 'Average';
-  if (tScore >= 30) return 'Low';
-  return 'Very Low';
-}
+export class PersonalityReportGenerator {
+    private norms: ScoringNorm[];
+    private competencies: ScoringCompetency[];
+    private questions: ScoringQuestion[];
 
-/**
- * Generates a basic description based on the level.
- * In a real app, this would query a content database.
- */
-function generateDescription(name: string, level: ReportLevel, _type: 'competency' | 'scale' | 'total'): string {
-  return `${name} is at a ${level} level.`;
-}
-
-/**
- * Generates the Deep Dive Report from the calculated detailed scores.
- * @param scores The output from calculatePersonalityScores
- * @param competencies Optional configuration to map scales to competencies.
- */
-export function generateDeepDiveReport(
-  scores: DetailedScores,
-  competencies?: ScoringCompetency[]
-): PersonalityReport {
-  // 1. Process Scales
-  const scaleReports: ScaleReport[] = Object.entries(scores.scales).map(([name, data]) => {
-    const level = getTScoreLevel(data.t_score);
-    return {
-      name,
-      raw: data.raw,
-      t_score: data.t_score,
-      level,
-      description: generateDescription(name, level, 'scale'),
-    };
-  });
-
-  // 2. Process Competencies
-  const competencyReports: CompetencyReport[] = Object.entries(scores.competencies).map(([name, data]) => {
-    const level = getTScoreLevel(data.t_score);
-
-    // Find scales for this competency if config is provided
-    let competencyScales: ScaleReport[] = [];
-    if (competencies) {
-      const compConfig = competencies.find(c => c.name === name);
-      if (compConfig) {
-        // Map the scale names in the config to the generated scale reports
-        competencyScales = compConfig.competency_scales
-          .map(cs => scaleReports.find(sr => sr.name === cs.scale_name))
-          .filter((sr): sr is ScaleReport => !!sr);
-      }
+    constructor(
+        norms: ScoringNorm[],
+        competencies: ScoringCompetency[],
+        questions: ScoringQuestion[]
+    ) {
+        this.norms = norms;
+        this.competencies = competencies;
+        this.questions = questions;
     }
 
-    return {
-      name,
-      raw: data.raw,
-      t_score: data.t_score,
-      level,
-      description: generateDescription(name, level, 'competency'),
-      scales: competencyScales
-    };
-  });
+    public generate(
+        answers: Record<string, string | number>,
+        meta: { attempt_number: number }
+    ): DeepDiveReport {
+        // Separate norms into Scale and Competency norms as required by Two-Layer architecture
+        // Assuming 'competencies' list defines which categories are competencies.
+        // Everything else in norms (except TOTAL) is likely a scale norm?
+        // Actually, lib/scoring.ts expects explicit lists.
+        // We can split norms based on whether they match a competency name or 'TOTAL'.
 
-  // 3. Sort Competencies to find Strengths/Weaknesses
-  // Sort descending by T-Score
-  const sortedByScore = [...competencyReports].sort((a, b) => b.t_score - a.t_score);
+        const competencyNames = new Set(this.competencies.map(c => c.name));
+        competencyNames.add('TOTAL');
 
-  // Top 3 Strengths
-  const strengths = sortedByScore.slice(0, 3);
+        const competencyNorms = this.norms.filter(n => competencyNames.has(n.category_name));
+        const scaleNorms = this.norms.filter(n => !competencyNames.has(n.category_name));
 
-  // Bottom 3 Areas for Improvement (lowest scores)
-  // We sort ascending for this
-  const areas_for_improvement = [...competencyReports]
-    .sort((a, b) => a.t_score - b.t_score)
-    .slice(0, 3);
+        const scores: DetailedScores = calculatePersonalityScores(
+            answers,
+            this.questions,
+            scaleNorms,
+            competencyNorms,
+            this.competencies
+        );
 
-  // 4. Total Summary
-  const totalLevel = getTScoreLevel(scores.total.t_score);
+        return {
+            meta: {
+                generated_at: new Date().toISOString(),
+                attempt_number: meta.attempt_number
+            },
+            summary: this.buildSummary(scores.total),
+            competencies: this.buildCompetencies(scores),
+            scales: this.buildScales(scores)
+        };
+    }
 
-  return {
-    summary: {
-      total_score: {
-        raw: scores.total.raw,
-        t_score: scores.total.t_score,
-        level: totalLevel,
-        description: generateDescription('Total Score', totalLevel, 'total')
-      },
-      overview_text: `The applicant has an overall ${totalLevel} score.`,
-    },
-    competencies: competencyReports,
-    scales: scaleReports, // Flat list
-    strengths,
-    areas_for_improvement,
-    generated_at: new Date().toISOString(),
-  };
+    private getLevel(tScore: number): 'VERY_LOW' | 'LOW' | 'AVERAGE' | 'HIGH' | 'VERY_HIGH' {
+        if (tScore >= 70) return 'VERY_HIGH';
+        if (tScore >= 60) return 'HIGH';
+        if (tScore >= 40) return 'AVERAGE';
+        if (tScore >= 30) return 'LOW';
+        return 'VERY_LOW';
+    }
+
+    private buildSummary(total: { raw: number; t_score: number }) {
+        const level = this.getLevel(total.t_score);
+        return {
+            total_score: {
+                raw: total.raw,
+                t_score: total.t_score,
+                level
+            },
+            overall_level: level,
+            interpretation: this.getInterpretation(level)
+        };
+    }
+
+    private buildCompetencies(scores: DetailedScores): ReportSection[] {
+        return this.competencies.map(comp => {
+            const s = scores.competencies[comp.name] || { raw: 0, t_score: 50 };
+
+            // Find sub-scales
+            const subScales = comp.competency_scales.map(scaleRef => {
+                const scaleName = scaleRef.scale_name;
+                const scaleScore = scores.scales[scaleName] || { raw: 0, t_score: 50 };
+                return {
+                    id: scaleName,
+                    title: scaleName,
+                    score: {
+                        raw: scaleScore.raw,
+                        t_score: scaleScore.t_score,
+                        level: this.getLevel(scaleScore.t_score)
+                    }
+                };
+            });
+
+            return {
+                id: comp.name,
+                title: comp.name,
+                score: {
+                    raw: s.raw,
+                    t_score: s.t_score,
+                    level: this.getLevel(s.t_score)
+                },
+                subSections: subScales
+            };
+        });
+    }
+
+    private buildScales(scores: DetailedScores): ReportSection[] {
+        return Object.entries(scores.scales).map(([name, s]) => ({
+            id: name,
+            title: name,
+            score: {
+                raw: s.raw,
+                t_score: s.t_score,
+                level: this.getLevel(s.t_score)
+            }
+        }));
+    }
+
+    private getInterpretation(level: string): string {
+        switch (level) {
+            case 'VERY_HIGH': return '조직 적합도가 매우 높습니다. 탁월한 역량을 발휘할 가능성이 큽니다.';
+            case 'HIGH': return '조직 적합도가 높습니다. 안정적인 성과가 기대됩니다.';
+            case 'AVERAGE': return '조직 적합도가 보통 수준입니다. 일반적인 직무 수행에 무리가 없습니다.';
+            case 'LOW': return '조직 적합도가 다소 낮습니다. 적응에 노력이 필요할 수 있습니다.';
+            case 'VERY_LOW': return '조직 적합도가 낮습니다. 면밀한 검토가 필요합니다.';
+            default: return '판단 불가';
+        }
+    }
 }

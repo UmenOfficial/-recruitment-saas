@@ -1,29 +1,36 @@
-export type ReportLevel = 'Very Low' | 'Low' | 'Average' | 'High' | 'Very High';
-
-export interface ScoreDetail {
-  raw: number;
-  t_score: number;
-  level: ReportLevel;
-  description?: string;
+export interface ReportScore {
+    raw: number;
+    t_score: number;
+    level?: 'VERY_LOW' | 'LOW' | 'AVERAGE' | 'HIGH' | 'VERY_HIGH';
+    percentile?: number;
 }
 
-export interface ScaleReport extends ScoreDetail {
-  name: string;
+export interface ReportSection {
+    id: string;
+    title: string;
+    score: ReportScore;
+    description?: string;
+    subSections?: ReportSection[];
 }
 
-export interface CompetencyReport extends ScoreDetail {
-  name: string;
-  scales: ScaleReport[]; // Scales belonging to this competency
+export interface ReportConfig {
+    levels: {
+        cutoff: number;
+        label: string;
+        description: string;
+    }[];
 }
 
-export interface PersonalityReport {
-  summary: {
-    total_score: ScoreDetail;
-    overview_text: string;
-  };
-  competencies: CompetencyReport[];
-  scales: ScaleReport[]; // Flat list of all scales for easy access
-  strengths: CompetencyReport[]; // Top scoring competencies
-  areas_for_improvement: CompetencyReport[]; // Lowest scoring competencies
-  generated_at: string; // ISO Date
+export interface DeepDiveReport {
+    meta: {
+        generated_at: string;
+        attempt_number: number;
+    };
+    summary: {
+        total_score: ReportScore;
+        overall_level: string;
+        interpretation: string;
+    };
+    competencies: ReportSection[];
+    scales: ReportSection[]; // Flat list of scales if needed separately
 }
