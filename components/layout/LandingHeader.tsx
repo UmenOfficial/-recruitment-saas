@@ -89,7 +89,7 @@ export default function LandingHeader() {
                     >
                         U-Talk
                     </Link>
-                    {user ? (
+                    {user && !user.is_anonymous ? (
                         <>
                             <Link
                                 href="/candidate/dashboard"
@@ -140,7 +140,7 @@ export default function LandingHeader() {
                             U-Talk
                         </Link>
 
-                        {user ? (
+                        {user && !user.is_anonymous ? (
                             <>
                                 <Link
                                     href="/candidate/dashboard"
