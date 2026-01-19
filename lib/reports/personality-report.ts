@@ -1,4 +1,4 @@
-import { DetailedScores } from '../scoring';
+import { DetailedScores, ScoringCompetency } from '../scoring';
 import { PersonalityReport, ReportLevel, CompetencyReport, ScaleReport } from '../../types/report';
 
 /**
@@ -17,15 +17,19 @@ export function getTScoreLevel(tScore: number): ReportLevel {
  * Generates a basic description based on the level.
  * In a real app, this would query a content database.
  */
-function generateDescription(name: string, level: ReportLevel, type: 'competency' | 'scale' | 'total'): string {
+function generateDescription(name: string, level: ReportLevel, _type: 'competency' | 'scale' | 'total'): string {
   return `${name} is at a ${level} level.`;
 }
 
 /**
  * Generates the Deep Dive Report from the calculated detailed scores.
  * @param scores The output from calculatePersonalityScores
+ * @param competencies Optional configuration to map scales to competencies.
  */
-export function generateDeepDiveReport(scores: DetailedScores): PersonalityReport {
+export function generateDeepDiveReport(
+  scores: DetailedScores,
+  competencies?: ScoringCompetency[]
+): PersonalityReport {
   // 1. Process Scales
   const scaleReports: ScaleReport[] = Object.entries(scores.scales).map(([name, data]) => {
     const level = getTScoreLevel(data.t_score);
@@ -39,47 +43,43 @@ export function generateDeepDiveReport(scores: DetailedScores): PersonalityRepor
   });
 
   // 2. Process Competencies
-  // Note: We need to know which scales belong to which competency.
-  // The DetailedScores object structure for competencies is just a record of scores.
-  // It doesn't inherently link back to the scales structure *inside* the score object,
-  // but existing logic in lib/scoring.ts uses `ScoringCompetency` config to do the math.
-  // Since we don't have the config passed in here, we might miss the hierarchy link (Competency -> Scales).
-  // However, looking at `DetailedScores` interface in `lib/scoring.ts`:
-  // It just has `scales` and `competencies` as separate records.
-  // Requirement: "Deep Dive Report" usually implies showing the hierarchy.
-  // Since I cannot change `lib/scoring.ts`, I'll check if I can infer or if I should just list them.
-  // Without the `ScoringCompetency` definition passed here, I can't reconstruct the tree perfectly.
-  // For now, I will return `scales` as an empty array in `CompetencyReport` or
-  // I will accept `competencyConfig` as an optional argument if needed later.
-  // BUT, the prompt said "receive applicant score data".
-  // Let's stick to what we have. I will leave `scales` empty in CompetencyReport for now
-  // OR I'll assume a flat structure is sufficient for the "Report" object
-  // and the UI will handle mapping if it has the config.
-  // actually, let's look at `types/report.ts` again. I defined `scales: ScaleReport[]` inside `CompetencyReport`.
-  // I will populate it if I can match names, but I don't have the mapping here.
-  // I will leave it empty for this iteration to avoid inventing mappings.
-
   const competencyReports: CompetencyReport[] = Object.entries(scores.competencies).map(([name, data]) => {
     const level = getTScoreLevel(data.t_score);
+
+    // Find scales for this competency if config is provided
+    let competencyScales: ScaleReport[] = [];
+    if (competencies) {
+      const compConfig = competencies.find(c => c.name === name);
+      if (compConfig) {
+        // Map the scale names in the config to the generated scale reports
+        competencyScales = compConfig.competency_scales
+          .map(cs => scaleReports.find(sr => sr.name === cs.scale_name))
+          .filter((sr): sr is ScaleReport => !!sr);
+      }
+    }
+
     return {
       name,
       raw: data.raw,
       t_score: data.t_score,
       level,
       description: generateDescription(name, level, 'competency'),
-      scales: [] // Cannot populate without config
+      scales: competencyScales
     };
   });
 
   // 3. Sort Competencies to find Strengths/Weaknesses
-  const sortedCompetencies = [...competencyReports].sort((a, b) => b.t_score - a.t_score);
+  // Sort descending by T-Score
+  const sortedByScore = [...competencyReports].sort((a, b) => b.t_score - a.t_score);
 
   // Top 3 Strengths
-  const strengths = sortedCompetencies.slice(0, 3);
+  const strengths = sortedByScore.slice(0, 3);
 
-  // Bottom 3 Areas for Improvement (reverse order of score)
-  // If fewer than 3, it takes what's available.
-  const areas_for_improvement = [...sortedCompetencies].sort((a, b) => a.t_score - b.t_score).slice(0, 3);
+  // Bottom 3 Areas for Improvement (lowest scores)
+  // We sort ascending for this
+  const areas_for_improvement = [...competencyReports]
+    .sort((a, b) => a.t_score - b.t_score)
+    .slice(0, 3);
 
   // 4. Total Summary
   const totalLevel = getTScoreLevel(scores.total.t_score);
@@ -95,7 +95,7 @@ export function generateDeepDiveReport(scores: DetailedScores): PersonalityRepor
       overview_text: `The applicant has an overall ${totalLevel} score.`,
     },
     competencies: competencyReports,
-    scales: scaleReports,
+    scales: scaleReports, // Flat list
     strengths,
     areas_for_improvement,
     generated_at: new Date().toISOString(),
