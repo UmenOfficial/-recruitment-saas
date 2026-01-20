@@ -36,9 +36,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com') -- Secure Admin Check
-    OR
-    (auth.jwt() ->> 'email' = 'manager@example.com') -- Add more admins if needed
+    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com') -- Secure Admin Check
 );
 
 -- 본인 또는 관리자는 삭제 가능
@@ -48,9 +46,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com')
-    OR
-    (auth.jwt() ->> 'email' = 'manager@example.com')
+    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com')
 );
 
 
@@ -83,7 +79,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com')
+    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com')
 );
 
 -- 본인 또는 관리자는 댓글 삭제 가능
@@ -93,7 +89,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com')
+    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com')
 );
 
 COMMIT;
