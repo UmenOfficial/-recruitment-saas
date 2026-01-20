@@ -26,8 +26,9 @@ export default async function CandidateDashboard() {
         redirect("/login?next=/candidate/dashboard");
     }
 
+    // Debug Logging
     // Fetch All Test Results
-    const { data: results } = await supabase
+    const { data: results, error } = await supabase
         .from("test_results")
         .select(`
             id,
@@ -46,7 +47,7 @@ export default async function CandidateDashboard() {
         const testId = r.test_id;
         if (!groups[testId]) {
             groups[testId] = {
-                test: r.tests,
+                test: (r as any).tests || { title: "Test Title (Join Disabled)", id: testId },
                 bestScore: r.total_score || 0,
                 bestResultId: r.id,
                 attemptCount: 0,
