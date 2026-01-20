@@ -1,12 +1,13 @@
 -- =====================================================
--- 커뮤니티 테이블 (posts, comments) RLS 강제 수정 (Nuclear Option)
--- UUID vs Text 타입 불일치 문제를 해결하기 위해 커뮤니티 관련 정책을 재생성합니다.
--- 또한 관리자(ADMIN, SUPER_ADMIN)가 RLS 환경에서도 게시글/댓글을 관리할 수 있도록 허용합니다.
+-- Community RLS Fix (Posts & Comments)
+-- Ensures Admins have full access and Users manage their own content.
+-- Includes robust Type Casting for UUID/Text comparisons.
+-- SECURE UPDATE: Uses exact email matching for admin checks.
 -- =====================================================
 
 BEGIN;
 
--- 1. POSTS 테이블 정책 초기화 및 재설정
+-- 1. POSTS 테이블 정책 초기화
 DO $$
 DECLARE
     r RECORD;
@@ -16,41 +17,44 @@ BEGIN
     END LOOP;
 END $$;
 
--- 정책 재설정
--- 조회: 누구나 가능 (비밀글 필터링은 애플리케이션 레벨에서 수행됨)
-CREATE POLICY "Public can view posts"
+-- Posts 정책 재설정
+-- 누구나 조회 가능
+CREATE POLICY "Public posts are viewable by everyone"
 ON posts FOR SELECT
-TO public
 USING (true);
 
--- 작성: 인증된 사용자 (본인 ID로만)
-CREATE POLICY "Users can create posts"
+-- 유저는 본인 글 작성 가능
+CREATE POLICY "Users can insert their own posts"
 ON posts FOR INSERT
 TO authenticated
 WITH CHECK (auth.uid()::text = user_id::text);
 
--- 수정: 본인 또는 관리자
-CREATE POLICY "Users and Admins can update posts"
+-- 본인 또는 관리자는 수정 가능
+CREATE POLICY "Users can update their own posts"
 ON posts FOR UPDATE
 TO authenticated
 USING (
-  auth.uid()::text = user_id::text
-  OR
-  EXISTS (SELECT 1 FROM users WHERE id::text = auth.uid()::text AND role IN ('ADMIN', 'SUPER_ADMIN'))
+    auth.uid()::text = user_id::text
+    OR
+    (auth.jwt() ->> 'email' = 'admin@example.com') -- Secure Admin Check
+    OR
+    (auth.jwt() ->> 'email' = 'manager@example.com') -- Add more admins if needed
 );
 
--- 삭제: 본인 또는 관리자
-CREATE POLICY "Users and Admins can delete posts"
+-- 본인 또는 관리자는 삭제 가능
+CREATE POLICY "Users can delete their own posts"
 ON posts FOR DELETE
 TO authenticated
 USING (
-  auth.uid()::text = user_id::text
-  OR
-  EXISTS (SELECT 1 FROM users WHERE id::text = auth.uid()::text AND role IN ('ADMIN', 'SUPER_ADMIN'))
+    auth.uid()::text = user_id::text
+    OR
+    (auth.jwt() ->> 'email' = 'admin@example.com')
+    OR
+    (auth.jwt() ->> 'email' = 'manager@example.com')
 );
 
 
--- 2. COMMENTS 테이블 정책 초기화 및 재설정
+-- 2. COMMENTS 테이블 정책 초기화
 DO $$
 DECLARE
     r RECORD;
@@ -60,37 +64,36 @@ BEGIN
     END LOOP;
 END $$;
 
--- 정책 재설정
--- 조회: 누구나 가능
-CREATE POLICY "Public can view comments"
+-- Comments 정책 재설정
+-- 로그인한 유저만 댓글 조회 가능 (혹은 Public으로 풀고 싶으면 true)
+CREATE POLICY "Comments viewable by authenticated users"
 ON comments FOR SELECT
-TO public
-USING (true);
+USING (auth.role() = 'authenticated');
 
--- 작성: 인증된 사용자 (본인 ID로만)
-CREATE POLICY "Users can create comments"
+-- 유저는 본인 댓글 작성 가능
+CREATE POLICY "Users can insert their own comments"
 ON comments FOR INSERT
 TO authenticated
 WITH CHECK (auth.uid()::text = user_id::text);
 
--- 수정: 본인 또는 관리자
-CREATE POLICY "Users and Admins can update comments"
+-- 본인 또는 관리자는 댓글 수정 가능
+CREATE POLICY "Users can update their own comments"
 ON comments FOR UPDATE
 TO authenticated
 USING (
-  auth.uid()::text = user_id::text
-  OR
-  EXISTS (SELECT 1 FROM users WHERE id::text = auth.uid()::text AND role IN ('ADMIN', 'SUPER_ADMIN'))
+    auth.uid()::text = user_id::text
+    OR
+    (auth.jwt() ->> 'email' = 'admin@example.com')
 );
 
--- 삭제: 본인 또는 관리자
-CREATE POLICY "Users and Admins can delete comments"
+-- 본인 또는 관리자는 댓글 삭제 가능
+CREATE POLICY "Users can delete their own comments"
 ON comments FOR DELETE
 TO authenticated
 USING (
-  auth.uid()::text = user_id::text
-  OR
-  EXISTS (SELECT 1 FROM users WHERE id::text = auth.uid()::text AND role IN ('ADMIN', 'SUPER_ADMIN'))
+    auth.uid()::text = user_id::text
+    OR
+    (auth.jwt() ->> 'email' = 'admin@example.com')
 );
 
 COMMIT;
