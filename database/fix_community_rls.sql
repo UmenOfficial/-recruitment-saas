@@ -85,6 +85,8 @@ USING (
     auth.uid()::text = user_id::text
     OR
     (auth.jwt() ->> 'email' = 'admin@umen.cloud')
+    OR
+    (auth.role() = 'service_role')
 );
 
 -- 본인 또는 관리자는 댓글 삭제 가능
@@ -95,6 +97,8 @@ USING (
     auth.uid()::text = user_id::text
     OR
     (auth.jwt() ->> 'email' = 'admin@umen.cloud')
+    OR
+    (auth.role() = 'service_role')
 );
 
 COMMIT;
