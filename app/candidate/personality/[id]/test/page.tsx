@@ -231,10 +231,12 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         const newAnswers = { ...answers, [currentIndex]: score };
         setAnswers(newAnswers);
 
-        // Immediate save
+        // Immediate save (Optimistic, Non-blocking)
         if (resultId) {
             const nextIdx = currentIndex < questions.length ? currentIndex + 1 : currentIndex;
-            await saveProgressAction(resultId, nextIdx, newAnswers, elapsedSeconds);
+            // Remove await to prevent UI blocking
+            saveProgressAction(resultId, nextIdx, newAnswers, elapsedSeconds)
+                .catch(err => console.error("Auto-save failed:", err));
         }
 
         if (currentIndex < questions.length) {
