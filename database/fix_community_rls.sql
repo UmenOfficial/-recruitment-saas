@@ -3,6 +3,7 @@
 -- Ensures Admins have full access and Users manage their own content.
 -- Includes robust Type Casting for UUID/Text comparisons.
 -- SECURE UPDATE: Uses exact email matching for admin checks.
+-- UPDATED: Comments are now publicly viewable.
 -- =====================================================
 
 BEGIN;
@@ -36,9 +37,9 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com') -- Secure Admin Check
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud') -- Secure Admin Check
     OR
-    (auth.jwt() ->> 'email' = 'manager@example.com') -- Add more admins if needed
+    (auth.role() = 'service_role')
 );
 
 -- 본인 또는 관리자는 삭제 가능
@@ -48,9 +49,9 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com')
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud')
     OR
-    (auth.jwt() ->> 'email' = 'manager@example.com')
+    (auth.role() = 'service_role')
 );
 
 
@@ -65,10 +66,10 @@ BEGIN
 END $$;
 
 -- Comments 정책 재설정
--- 로그인한 유저만 댓글 조회 가능 (혹은 Public으로 풀고 싶으면 true)
-CREATE POLICY "Comments viewable by authenticated users"
+-- 누구나 댓글 조회 가능 (이전에는 authenticated만 가능했음 -> disappearing bug fix)
+CREATE POLICY "Comments are viewable by everyone"
 ON comments FOR SELECT
-USING (auth.role() = 'authenticated');
+USING (true);
 
 -- 유저는 본인 댓글 작성 가능
 CREATE POLICY "Users can insert their own comments"
@@ -83,7 +84,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com')
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud')
 );
 
 -- 본인 또는 관리자는 댓글 삭제 가능
@@ -93,7 +94,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'admin@example.com')
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud')
 );
 
 COMMIT;
