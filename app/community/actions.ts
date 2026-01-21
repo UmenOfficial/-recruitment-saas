@@ -169,7 +169,10 @@ export async function fetchPostDetail(id: string) {
             .single();
 
         const safeUserRole = userRole as any;
-        const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' || safeUserRole?.role === 'ADMIN';
+        const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' ||
+                       safeUserRole?.role === 'ADMIN' ||
+                       session.user.email === 'admin@umen.cloud'; // Hardcoded fallback
+
         const isAuthor = safePost.user_id === session.user.id;
 
         if (!isAdmin && !isAuthor) {
@@ -217,7 +220,9 @@ export async function addComment(postId: string, content: string) {
         .single();
 
     const safeUserRole = userRole as any;
-    const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' || safeUserRole?.role === 'ADMIN';
+    const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' ||
+                   safeUserRole?.role === 'ADMIN' ||
+                   session.user.email === 'admin@umen.cloud';
 
     // Secret Post Logic (QNA OR is_secret)
     // We treat QNA as secret by default for backward compatibility, AND check is_secret column
@@ -277,7 +282,10 @@ export async function updateComment(commentId: string, content: string) {
         .eq('id', session.user.id)
         .single();
 
-    const isAdmin = (userRole as any)?.role === 'ADMIN' || (userRole as any)?.role === 'SUPER_ADMIN';
+    const isAdmin = (userRole as any)?.role === 'ADMIN' ||
+                   (userRole as any)?.role === 'SUPER_ADMIN' ||
+                   session.user.email === 'admin@umen.cloud';
+
     const isAuthor = (comment as any).user_id === session.user.id;
 
     if (!isAuthor && !isAdmin) {
@@ -316,7 +324,10 @@ export async function deleteComment(commentId: string) {
         .eq('id', session.user.id)
         .single();
 
-    const isAdmin = (userRole as any)?.role === 'ADMIN' || (userRole as any)?.role === 'SUPER_ADMIN';
+    const isAdmin = (userRole as any)?.role === 'ADMIN' ||
+                   (userRole as any)?.role === 'SUPER_ADMIN' ||
+                   session.user.email === 'admin@umen.cloud';
+
     const isAuthor = (comment as any).user_id === session.user.id;
 
     if (!isAuthor && !isAdmin) {
