@@ -37,7 +37,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com') -- Secure Admin Check
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud') -- Secure Admin Check
     OR
     (auth.role() = 'service_role')
 );
@@ -49,7 +49,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com')
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud')
     OR
     (auth.role() = 'service_role')
 );
@@ -84,7 +84,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com')
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud')
 );
 
 -- 본인 또는 관리자는 댓글 삭제 가능
@@ -94,7 +94,7 @@ TO authenticated
 USING (
     auth.uid()::text = user_id::text
     OR
-    (auth.jwt() ->> 'email' = 'Adminofficial@Umen.com')
+    (auth.jwt() ->> 'email' = 'admin@umen.cloud')
 );
 
 COMMIT;
