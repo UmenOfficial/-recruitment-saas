@@ -65,13 +65,14 @@ export async function fetchPosts(category?: string) {
 export async function fetchPostDetail(id: string) {
     const supabase = await createServerSupabaseClient();
 
+    // Service Client for Admin operations (View Count, Fetching Comments)
+    const serviceClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Increment View Count (Service Role)
     try {
-        const serviceClient = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-
         // Get current count first to avoid race conditions with atomic update if possible, 
         // but standard update is fine for now. 
         // We use rpc if available, but fallback to select-update.
@@ -91,14 +92,11 @@ export async function fetchPostDetail(id: string) {
         console.error('Failed to increment view count:', e);
     }
 
+    // Fetch Post using User Client (Subject to RLS)
+    // We do NOT fetch comments here anymore to avoid RLS issues hiding them.
     const { data: post, error } = await supabase
         .from('posts')
-        .select(`
-            *,
-            comments (
-                id, content, created_at, user_id
-            )
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -107,25 +105,28 @@ export async function fetchPostDetail(id: string) {
         return null;
     }
 
-    // Sort comments by created_at desc
-    const safePost = post as any;
-    if (safePost.comments && safePost.comments.length > 0) {
-        safePost.comments.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    // Fetch Comments using Service Client (Bypass RLS)
+    // This ensures comments are always visible if they exist
+    const { data: comments } = await serviceClient
+        .from('comments')
+        .select('id, content, created_at, user_id')
+        .eq('post_id', id)
+        .order('created_at', { ascending: true }); // Oldest first
 
+    const safePost = post as any;
+    safePost.comments = comments || [];
+
+    // Map User Roles for Comments (if any)
+    if (safePost.comments.length > 0) {
         // Fetch User Roles for Comments (Manually to bypass RLS/Relation issues)
         // Use Service Role to ensure we can read roles regardless of current user
         try {
-            const serviceSupabase = createClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.SUPABASE_SERVICE_ROLE_KEY!
-            );
-
             const userIds = safePost.comments.map((c: any) => c.user_id);
             // Deduplicate
             const uniqueUserIds = Array.from(new Set(userIds));
 
             if (uniqueUserIds.length > 0) {
-                const { data: users, error: userError } = await serviceSupabase
+                const { data: users, error: userError } = await serviceClient
                     .from('users')
                     .select('id, role')
                     .in('id', uniqueUserIds);
