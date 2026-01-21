@@ -18,7 +18,7 @@ export default async function AptitudeTestsPage() {
     }
 
     // ACTIVE 상태의 적성검사 목록 조회
-    const { data: tests } = await supabase
+    const { data: tests } = await (supabase as any)
         .from("tests")
         .select("*")
         .eq("type", "APTITUDE")
@@ -43,7 +43,7 @@ export default async function AptitudeTestsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {tests && tests.length > 0 ? (
-                    tests.map((test) => (
+                    tests.map((test: any) => (
                         <Link
                             key={test.id}
                             href={`/candidate/aptitude/${test.id}/guide`}

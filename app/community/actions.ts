@@ -236,7 +236,7 @@ export async function addComment(postId: string, content: string) {
         }
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('comments')
         .insert({
             post_id: postId,
@@ -283,7 +283,7 @@ export async function updateComment(commentId: string, content: string) {
         return { success: false, error: 'Permission denied' };
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('comments')
         .update({ content } as any)
         .eq('id', commentId);
@@ -322,7 +322,7 @@ export async function deleteComment(commentId: string) {
         return { success: false, error: 'Permission denied' };
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('comments')
         .delete()
         .eq('id', commentId);

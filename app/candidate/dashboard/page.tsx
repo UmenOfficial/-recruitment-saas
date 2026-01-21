@@ -28,7 +28,7 @@ export default async function CandidateDashboard() {
 
     // Debug Logging
     // Fetch All Test Results
-    const { data: results, error } = await supabase
+    const { data: results, error } = await (supabase as any)
         .from("test_results")
         .select(`
             id,
@@ -43,7 +43,7 @@ export default async function CandidateDashboard() {
 
     // Grouping by Test
     const groups: Record<string, any> = {};
-    results?.forEach((r) => {
+    results?.forEach((r: any) => {
         const testId = r.test_id;
         if (!groups[testId]) {
             groups[testId] = {

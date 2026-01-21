@@ -17,7 +17,7 @@ export type AdminContent = {
 
 export async function getContents() {
     const supabase = await createServerSupabaseClient();
-    const { data, error } = await (await supabase)
+    const { data, error } = await (supabase as any)
         .from('admin_contents')
         .select('*')
         .order('created_at', { ascending: false });
@@ -32,7 +32,7 @@ export async function getContents() {
 
 export async function getPublishedContents() {
     const supabase = await createServerSupabaseClient();
-    const { data, error } = await (await supabase)
+    const { data, error } = await (supabase as any)
         .from('admin_contents')
         .select('*')
         .eq('is_published', true)
@@ -69,7 +69,7 @@ export async function createContent(formData: FormData) {
     // Upload thumbnail if provided
     if (thumbnail_file && thumbnail_file.size > 0) {
         const filename = `${Date.now()}-${thumbnail_file.name}`;
-        const { data, error } = await (await supabase)
+        const { data, error } = await supabase
             .storage
             .from('admin_content_thumbnails')
             .upload(filename, thumbnail_file);
@@ -79,7 +79,7 @@ export async function createContent(formData: FormData) {
             throw new Error('Thumbnail upload failed');
         }
 
-        const { data: publicUrlData } = (await supabase)
+        const { data: publicUrlData } = supabase
             .storage
             .from('admin_content_thumbnails')
             .getPublicUrl(filename);
@@ -87,7 +87,7 @@ export async function createContent(formData: FormData) {
         thumbnail_url = publicUrlData.publicUrl;
     }
 
-    const { error } = await (await supabase)
+    const { error } = await (supabase as any)
         .from('admin_contents')
         .insert({
             title,
@@ -131,7 +131,7 @@ export async function updateContent(id: string, formData: FormData) {
     // Upload thumbnail if provided (Update only if new file exists)
     if (thumbnail_file && thumbnail_file.size > 0) {
         const filename = `${Date.now()}-${thumbnail_file.name}`;
-        const { error } = await (await supabase)
+        const { error } = await supabase
             .storage
             .from('admin_content_thumbnails')
             .upload(filename, thumbnail_file);
@@ -141,7 +141,7 @@ export async function updateContent(id: string, formData: FormData) {
             throw new Error('Thumbnail upload failed');
         }
 
-        const { data: publicUrlData } = (await supabase)
+        const { data: publicUrlData } = supabase
             .storage
             .from('admin_content_thumbnails')
             .getPublicUrl(filename);
@@ -161,7 +161,7 @@ export async function updateContent(id: string, formData: FormData) {
         updatePayload.thumbnail_url = thumbnail_url;
     }
 
-    const { error } = await (await supabase)
+    const { error } = await (supabase as any)
         .from('admin_contents')
         .update(updatePayload)
         .eq('id', id);
@@ -178,7 +178,7 @@ export async function updateContent(id: string, formData: FormData) {
 export async function deleteContent(id: string) {
     const supabase = await createServerSupabaseClient();
 
-    const { error } = await (await supabase)
+    const { error } = await (supabase as any)
         .from('admin_contents')
         .delete()
         .eq('id', id);
@@ -195,7 +195,7 @@ export async function deleteContent(id: string) {
 export async function togglePublish(id: string, currentStatus: boolean) {
     const supabase = await createServerSupabaseClient();
 
-    const { error } = await (await supabase)
+    const { error } = await (supabase as any)
         .from('admin_contents')
         .update({ is_published: !currentStatus })
         .eq('id', id);
@@ -219,7 +219,7 @@ export async function uploadContentImage(formData: FormData): Promise<string> {
     const fileExt = file.name.split('.').pop();
     const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
-    const { data, error } = await (await supabase)
+    const { data, error } = await supabase
         .storage
         .from('admin_content_images')
         .upload(filename, file);
@@ -229,7 +229,7 @@ export async function uploadContentImage(formData: FormData): Promise<string> {
         throw new Error('Image upload failed');
     }
 
-    const { data: publicUrlData } = (await supabase)
+    const { data: publicUrlData } = supabase
         .storage
         .from('admin_content_images')
         .getPublicUrl(filename);

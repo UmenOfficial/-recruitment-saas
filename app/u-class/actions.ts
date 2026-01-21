@@ -25,7 +25,7 @@ export async function getComments(contentId: string): Promise<Comment[]> {
     // 1. Fetch user role first to check if ADMIN
     let isAdmin = false;
     if (currentUser) {
-        const { data: userData } = await (await supabase)
+        const { data: userData } = await (await supabase as any)
             .from('users')
             .select('role')
             .eq('id', currentUser.id)
@@ -34,7 +34,7 @@ export async function getComments(contentId: string): Promise<Comment[]> {
     }
 
     // 2. Fetch comments with author info
-    const { data: comments, error } = await (await supabase)
+    const { data: comments, error } = await (await supabase as any)
         .from('admin_content_comments')
         .select(`
             *,
@@ -127,7 +127,7 @@ export async function createComment(
         throw new Error('로그인이 필요합니다.');
     }
 
-    const { error } = await (await supabase)
+    const { error } = await (supabase as any)
         .from('admin_content_comments')
         .insert({
             content_id: contentId,
@@ -156,7 +156,7 @@ export async function deleteComment(commentId: string, contentId: string) {
     // Check permission (Own comment or Admin) - RLS handles this mostly, but good to check
     // Actually our RLS allows delete for own or admin. So direct delete is fine.
 
-    const { error } = await (await supabase)
+    const { error } = await (supabase as any)
         .from('admin_content_comments')
         .delete()
         .eq('id', commentId);

@@ -68,11 +68,6 @@ export default function MindCareAnalysis({ detailedScores }: MindCareAnalysisPro
     const [isOpen, setIsOpen] = useState(false);
     const [results, setResults] = useState<MindCareResult[]>([]);
 
-    useEffect(() => {
-        if (!detailedScores?.scales) return;
-        analyzeScores();
-    }, [detailedScores]);
-
     const analyzeScores = () => {
         const list: MindCareResult[] = [];
         const scales = detailedScores.scales;
@@ -97,6 +92,12 @@ export default function MindCareAnalysis({ detailedScores }: MindCareAnalysisPro
 
         setResults(list);
     };
+
+    useEffect(() => {
+        if (!detailedScores?.scales) return;
+        analyzeScores();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [detailedScores]);
 
     const warningCount = results.length;
 

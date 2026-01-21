@@ -19,22 +19,21 @@ export default async function PersonalityTestsPage() {
     }
 
     // ACTIVE 상태의 인성검사 목록 조회
-    const { data: tests } = await supabase
+    const { data: tests } = await (supabase as any)
         .from("tests")
         .select("*")
         .eq("type", "PERSONALITY")
         .eq("status", "ACTIVE")
-        .eq("status", "ACTIVE")
         .order("created_at", { ascending: false });
 
     // 진행 중인 검사 확인 (이어하기 기능을 위해)
-    const { data: ongoingResults } = await supabase
+    const { data: ongoingResults } = await (supabase as any)
         .from("test_results")
         .select("test_id")
         .eq("user_id", session.user.id)
         .is("completed_at", null);
 
-    const ongoingTestIds = new Set(ongoingResults?.map(r => r.test_id));
+    const ongoingTestIds = new Set(ongoingResults?.map((r: any) => r.test_id));
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -54,7 +53,7 @@ export default async function PersonalityTestsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {tests && tests.length > 0 ? (
-                    tests.map((test) => {
+                    tests.map((test: any) => {
                         const isOngoing = ongoingTestIds.has(test.id);
                         const href = isOngoing
                             ? `/candidate/personality/${test.id}/test`

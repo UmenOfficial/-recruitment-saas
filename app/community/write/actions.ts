@@ -27,7 +27,7 @@ export async function createPostAction(formData: FormData) {
         throw new Error('Title and content required');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
         .from('posts')
         .insert({
             user_id: session.user.id,
