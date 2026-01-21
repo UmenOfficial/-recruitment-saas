@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -115,7 +116,6 @@ export async function middleware(req: NextRequest) {
     if (session) {
       // [FIX] Use Service Role to bypass RLS for role check
       // This ensures we can always read the role even if RLS policies are complex or failing for the user context
-      const { createClient } = require('@supabase/supabase-js');
       const serviceSupabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!

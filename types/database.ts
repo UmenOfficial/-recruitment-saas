@@ -556,6 +556,82 @@ export interface Database {
                     scale_name?: string;
                 };
             };
+            admin_contents: {
+                Row: {
+                    id: string;
+                    title: string;
+                    type: 'VIDEO' | 'ARTICLE';
+                    content_url: string | null;
+                    summary: string;
+                    body: string | null;
+                    thumbnail_url: string | null;
+                    is_published: boolean;
+                    view_count: number;
+                    author_id: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    title: string;
+                    type: 'VIDEO' | 'ARTICLE';
+                    content_url?: string | null;
+                    summary: string;
+                    body?: string | null;
+                    thumbnail_url?: string | null;
+                    is_published?: boolean;
+                    view_count?: number;
+                    author_id?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    title?: string;
+                    type?: 'VIDEO' | 'ARTICLE';
+                    content_url?: string | null;
+                    summary?: string;
+                    body?: string | null;
+                    thumbnail_url?: string | null;
+                    is_published?: boolean;
+                    view_count?: number;
+                    author_id?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
+            admin_content_comments: {
+                Row: {
+                    id: string;
+                    content_id: string;
+                    user_id: string;
+                    parent_id: string | null;
+                    content: string;
+                    is_secret: boolean;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    content_id: string;
+                    user_id: string;
+                    parent_id?: string | null;
+                    content: string;
+                    is_secret?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    content_id?: string;
+                    user_id?: string;
+                    parent_id?: string | null;
+                    content?: string;
+                    is_secret?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
         };
         Views: {
             [_ in never]: never;

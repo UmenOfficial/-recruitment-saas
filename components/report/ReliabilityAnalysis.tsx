@@ -30,14 +30,8 @@ export default function ReliabilityAnalysis({ questions, answers }: ReliabilityA
     const [isOpen, setIsOpen] = useState(false);
     const [results, setResults] = useState<AnalysisResult[]>([]);
 
-    useEffect(() => {
-        if (!questions || !answers) return;
-        analyzeReliability();
-    }, [questions, answers]);
-
     const analyzeReliability = () => {
         const resultList: AnalysisResult[] = [];
-
         // 1. Standard Deviation Check
         const validStdDevItems = questions.filter(q => !EXCLUDED_SCALES.includes(q.category));
         const stdDevScores = validStdDevItems.map(q => answers[q.id]).filter(s => s !== undefined);
@@ -126,6 +120,12 @@ export default function ReliabilityAnalysis({ questions, answers }: ReliabilityA
 
         setResults(resultList);
     };
+
+    useEffect(() => {
+        if (!questions || !answers) return;
+        analyzeReliability();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [questions, answers]);
 
     const warningCount = results.filter(r => r.status === 'WARNING').length;
 

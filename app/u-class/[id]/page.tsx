@@ -11,7 +11,7 @@ import { getComments } from '../actions';
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
     const { id } = await params;
     const supabase = await createServerSupabaseClient();
-    const { data: post } = await (await supabase)
+    const { data: post } = await (await supabase as any)
         .from('admin_contents')
         .select('title, summary')
         .eq('id', id)
@@ -34,7 +34,7 @@ export default async function UClassDetailPage({ params }: { params: { id: strin
     const supabase = await createServerSupabaseClient();
 
     // Fetch Content
-    const { data: post, error } = await (await supabase)
+    const { data: post, error } = await (await supabase as any)
         .from('admin_contents')
         .select('*')
         .eq('id', id)
@@ -49,7 +49,7 @@ export default async function UClassDetailPage({ params }: { params: { id: strin
     const { data: { user } } = await (await supabase).auth.getUser();
     let isAdmin = false;
     if (user) {
-        const { data: userData } = await (await supabase)
+        const { data: userData } = await (await supabase as any)
             .from('users')
             .select('role')
             .eq('id', user.id)
