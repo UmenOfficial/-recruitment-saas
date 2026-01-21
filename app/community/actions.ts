@@ -171,7 +171,7 @@ export async function fetchPostDetail(id: string) {
         const safeUserRole = userRole as any;
         const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' ||
                        safeUserRole?.role === 'ADMIN' ||
-                       session.user.email === 'admin@umen.cloud'; // Hardcoded fallback
+                       (session.user?.email === 'admin@umen.cloud'); // Safer check
 
         const isAuthor = safePost.user_id === session.user.id;
 
@@ -222,7 +222,7 @@ export async function addComment(postId: string, content: string) {
     const safeUserRole = userRole as any;
     const isAdmin = safeUserRole?.role === 'SUPER_ADMIN' ||
                    safeUserRole?.role === 'ADMIN' ||
-                   session.user.email === 'admin@umen.cloud';
+                   (session.user?.email === 'admin@umen.cloud');
 
     // Secret Post Logic (QNA OR is_secret)
     // We treat QNA as secret by default for backward compatibility, AND check is_secret column
@@ -284,7 +284,7 @@ export async function updateComment(commentId: string, content: string) {
 
     const isAdmin = (userRole as any)?.role === 'ADMIN' ||
                    (userRole as any)?.role === 'SUPER_ADMIN' ||
-                   session.user.email === 'admin@umen.cloud';
+                   (session.user?.email === 'admin@umen.cloud');
 
     const isAuthor = (comment as any).user_id === session.user.id;
 
@@ -326,7 +326,7 @@ export async function deleteComment(commentId: string) {
 
     const isAdmin = (userRole as any)?.role === 'ADMIN' ||
                    (userRole as any)?.role === 'SUPER_ADMIN' ||
-                   session.user.email === 'admin@umen.cloud';
+                   (session.user?.email === 'admin@umen.cloud');
 
     const isAuthor = (comment as any).user_id === session.user.id;
 
