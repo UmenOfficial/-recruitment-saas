@@ -47,6 +47,7 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
 
     // Prevent double initialization
     const initializingRef = useRef(false);
+    const isSubmittingRef = useRef(false); // Track submission for unload handler
 
     // Sync refs
     useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
@@ -81,7 +82,7 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         };
 
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (sessionStorage.getItem('is_logout_process') === 'true') {
+            if (isSubmittingRef.current || sessionStorage.getItem('is_logout_process') === 'true') {
                 return;
             }
 
@@ -97,7 +98,9 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         return () => {
             window.removeEventListener('popstate', handlePopState);
             window.removeEventListener('beforeunload', handleBeforeUnload);
-            saveProgress(true);
+            if (!isSubmittingRef.current) {
+                saveProgress(true);
+            }
         };
     }, [saveProgress]);
 
@@ -280,6 +283,7 @@ export default function PersonalityTestPage({ params }: { params: Promise<{ id: 
         }
 
         setIsSubmitting(true);
+        isSubmittingRef.current = true;
         stopTimer();
 
         try {
