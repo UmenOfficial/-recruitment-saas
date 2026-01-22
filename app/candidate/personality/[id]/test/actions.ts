@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { calculatePersonalityScores, ScoringQuestion } from '@/lib/scoring';
+import { mapNorms } from '@/lib/norm-mapper';
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -239,27 +240,17 @@ export async function submitTestAction(resultId: string, testId: string, answers
         if (competencyResult.error) throw competencyResult.error;
         if (questionsResult.error) throw questionsResult.error;
 
-        const norms = normsResult.data;
-        const competencyDefs = competencyResult.data;
+        const norms = normsResult.data || [];
+        const competencyDefs = competencyResult.data || [];
         const questions = questionsResult.data?.map((r: any) => r.questions) || [];
 
-        // 3. Prepare Scoring Data
-        const scaleNorms = (norms as any)?.filter((n: any) => n.category_name.startsWith('Scale_')).map((n: any) => ({
-            category_name: n.category_name.replace('Scale_', ''),
-            mean_value: Number(n.mean_value),
-            std_dev_value: Number(n.std_dev_value)
-        })) || [];
-
-        const competencyNorms = (norms as any)?.filter((n: any) => n.category_name.startsWith('Comp_')).map((n: any) => ({
-            category_name: n.category_name.replace('Comp_', ''),
-            mean_value: Number(n.mean_value),
-            std_dev_value: Number(n.std_dev_value)
-        })) || [];
-
-        const compList = (competencyDefs || []).map((c: any) => ({
+        // 3. Prepare Scoring Data (Use robust mapper)
+        const compList = competencyDefs.map((c: any) => ({
             name: c.name,
             competency_scales: c.competency_scales
         }));
+
+        const { scaleNorms, competencyNorms } = mapNorms(norms, compList);
 
         const scoringQuestions: ScoringQuestion[] = questions.map((q: any) => ({
             id: q.id,
