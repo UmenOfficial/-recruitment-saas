@@ -225,21 +225,23 @@ export async function submitTestAction(resultId: string, testId: string, answers
 
         console.log("Submitting test...", { resultId, testId, user: user.id });
 
-        // 1. Fetch Norms & Competencies
-        const { data: norms } = await supabase.from('test_norms').select('*').eq('test_id', testId);
-        const { data: competencyDefs } = await supabase.from('competencies').select('id, name, competency_scales(scale_name)').eq('test_id', testId);
+        // 1. Fetch Data in Parallel (Optimization)
+        // 병렬 처리를 통해 데이터 조회 시간을 단축합니다. (규준, 역량 정의, 문항 정보)
+        console.time('FetchData');
+        const [normsResult, competencyResult, questionsResult] = await Promise.all([
+            supabase.from('test_norms').select('*').eq('test_id', testId),
+            supabase.from('competencies').select('id, name, competency_scales(scale_name)').eq('test_id', testId),
+            supabase.from('test_questions').select('questions(*)').eq('test_id', testId)
+        ]);
+        console.timeEnd('FetchData');
 
-        // 2. Fetch Questions (To get category and reverse scoring)
-        // We fetching test_questions relation to get is_practice flag if needed, but questions table has category/reverse info
-        // Wait, questions table DOES NOT HAVE is_reverse_scored in this schema?
-        // Let's check schema/types. `components/admin/ExcelUpload.tsx` implies it inserts `is_reverse_scored` into `questions`.
-        // Let's assume `questions` has `is_reverse_scored`.
-        const { data: relations } = await supabase
-            .from('test_questions')
-            .select('questions(*)')
-            .eq('test_id', testId);
+        if (normsResult.error) throw normsResult.error;
+        if (competencyResult.error) throw competencyResult.error;
+        if (questionsResult.error) throw questionsResult.error;
 
-        const questions = relations?.map((r: any) => r.questions) || [];
+        const norms = normsResult.data;
+        const competencyDefs = competencyResult.data;
+        const questions = questionsResult.data?.map((r: any) => r.questions) || [];
 
         // 3. Prepare Scoring Data
         const scaleNorms = (norms as any)?.filter((n: any) => n.category_name.startsWith('Scale_')).map((n: any) => ({
