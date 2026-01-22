@@ -288,14 +288,15 @@ export default function ReportContent({
                         {competencies.map((comp: any) => {
                             const data = compScores[comp.name] || { t_score: 50 };
                             const narr = narratives[comp.name] || { strengths: [], weaknesses: [] };
+                            const displayName = comp.name.replace(/^Comp_/, '');
 
                             return (
                                 <div key={comp.id} className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start border-b border-slate-50 pb-12 last:border-0 last:pb-0">
                                     <div className="lg:col-span-5 space-y-6">
-                                        <StatBar label={comp.name} value={data.t_score} colorClass="bg-gradient-to-r from-blue-400 to-indigo-500" />
+                                        <StatBar label={displayName} value={data.t_score} colorClass="bg-gradient-to-r from-blue-400 to-indigo-500" />
                                         <div className="mt-4">
                                             <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                                {comp.description || `귀하의 '${comp.name}' 역량이 돋보이는 결과입니다.`}
+                                                {comp.description || `귀하의 '${displayName}' 역량이 돋보이는 결과입니다.`}
                                             </p>
                                         </div>
                                     </div>
@@ -329,7 +330,7 @@ export default function ReportContent({
                                                 <div className="flex items-start gap-3 text-indigo-600">
                                                     <Info size={16} className="mt-0.5 shrink-0" />
                                                     <p className="text-[13px] font-bold leading-relaxed">
-                                                        보완점들을 조금만 더 의식적으로 관리한다면, 귀하의 뛰어난 &apos;{comp.name}&apos; 역량은 한층 더 강력한 경쟁력이 될 것입니다.
+                                                        보완점들을 조금만 더 의식적으로 관리한다면, 귀하의 뛰어난 &apos;{displayName}&apos; 역량은 한층 더 강력한 경쟁력이 될 것입니다.
                                                     </p>
                                                 </div>
                                             </div>
