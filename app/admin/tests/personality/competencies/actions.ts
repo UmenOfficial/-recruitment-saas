@@ -115,7 +115,7 @@ export async function saveCompetency(
                 .from('competencies')
                 .insert({
                     test_id: testId,
-                    name,
+                    name: name.startsWith('Comp_') ? name : `Comp_${name}`,
                     description
                 })
                 .select()
@@ -127,7 +127,7 @@ export async function saveCompetency(
             const { error } = await supabase
                 .from('competencies')
                 .update({
-                    name,
+                    name: name.startsWith('Comp_') ? name : `Comp_${name}`,
                     description
                 })
                 .eq('id', competencyId);

@@ -56,7 +56,7 @@ export function mapNorms(
         // B. Handle Plain Names (Flexible mode)
         // If the name exactly matches a known scale or competency
         if (validScaleNames.has(name)) {
-             scaleNorms.push({
+            scaleNorms.push({
                 category_name: name,
                 mean_value: mean,
                 std_dev_value: std
@@ -75,7 +75,7 @@ export function mapNorms(
 
         // Also handle 'TOTAL' if not explicitly defined but present
         if (name === 'TOTAL' || name === 'Total') {
-             competencyNorms.push({
+            competencyNorms.push({
                 category_name: 'TOTAL',
                 mean_value: mean,
                 std_dev_value: std

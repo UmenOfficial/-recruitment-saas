@@ -94,9 +94,20 @@ export async function fetchScoringDetails(testId: string, globalTestId: string) 
  */
 export async function saveNorms(norms: any[]) {
     try {
+        // Enforce Prefixes
+        const processedNorms = norms.map(n => {
+            let name = n.category_name;
+            if (name !== 'TOTAL' && name !== 'Total' && !name.startsWith('Comp_')) {
+                if (!name.startsWith('Scale_')) {
+                    name = `Scale_${name}`;
+                }
+            }
+            return { ...n, category_name: name };
+        });
+
         const { error } = await supabase
             .from('test_norms')
-            .upsert(norms, { onConflict: 'test_id, category_name' });
+            .upsert(processedNorms, { onConflict: 'test_id, category_name' });
 
         if (error) throw error;
         return { success: true };
