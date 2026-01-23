@@ -13,6 +13,7 @@ export async function fetchCandidatesList() {
         const { data: users, error: userError } = await supabase
             .from('users')
             .select('*')
+            .not('email', 'ilike', 'guest_%')
             .order('created_at', { ascending: false });
 
         if (userError) throw userError;
