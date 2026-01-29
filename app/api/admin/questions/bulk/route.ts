@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize with Service Role Key to bypass RLS for Admin operations
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Define the type here or import if shared
 interface QuestionPayload {
@@ -16,7 +22,7 @@ interface QuestionPayload {
 
 export async function POST(request: Request) {
     try {
-        const supabase = await createServerSupabaseClient();
+        // const supabase = await createServerSupabaseClient(); // Removed: Using Service Role client
         const body = await request.json();
         const questions: QuestionPayload[] = body.questions;
         const replace = body.replace || false; // Check for replace flag

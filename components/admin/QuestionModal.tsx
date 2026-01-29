@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase/global-client';
 import { toast } from 'sonner';
+import { upsertQuestionAction } from '@/app/admin/questions/actions';
 
 interface QuestionModalProps {
     isOpen: boolean;
@@ -188,6 +189,7 @@ export default function QuestionModal({ isOpen, onClose, onSuccess, defaultType,
             }
 
             const payload = {
+                id: initialData?.id, // undefined if creating
                 category: formData.category || '일반',
                 difficulty: 'MEDIUM',
                 content: formData.question,
@@ -200,30 +202,12 @@ export default function QuestionModal({ isOpen, onClose, onSuccess, defaultType,
                 is_reverse_scored: formData.isReverseScore
             };
 
-            let error;
-            if (initialData) {
-                // UPDATE
-                const { error: updateError } = await (supabase
-                    .from('questions') as any)
-                    .update(payload)
-                    .eq('id', initialData.id);
-                error = updateError;
-            } else {
-                // INSERT
-                const { error: insertError } = await (supabase
-                    .from('questions') as any)
-                    .insert(payload);
-                error = insertError;
-            }
+            const res = await upsertQuestionAction(payload);
 
-            if (error) throw error;
+            if (!res.success) throw new Error(res.error);
+
             toast.success(initialData ? '문제가 수정되었습니다.' : '문제가 추가되었습니다.');
             onSuccess();
-
-            // Initial cleanup handled by useEffect when modal closes or opens with new data,
-            // but for safety/UX we can clear here too if we want to stay open (optional).
-            // Usually we assume modal closes on success.
-
         } catch (error: any) {
             toast.error(error.message);
         } finally {

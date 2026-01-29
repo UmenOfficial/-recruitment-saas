@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase/global-client';
 import { Plus, Trash2, Search, FileText, FileSpreadsheet } from 'lucide-react';
 import ExcelUpload from '@/components/admin/ExcelUpload';
 import QuestionModal from '@/components/admin/QuestionModal';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 /**
  * 문제 관리 페이지
@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Info } from 'lucide-react'; // Import Info icon for usage check
-import { fetchQuestionsAction, deleteQuestionAction } from './actions';
+import { fetchQuestionsAction, deleteQuestionAction, upsertQuestionAction } from './actions';
 
 export default function QuestionsPage() {
     const router = useRouter();
@@ -148,7 +148,6 @@ export default function QuestionsPage() {
 
     return (
         <div className="space-y-6">
-            <Toaster position="top-right" />
 
             <div className="flex justify-between items-center">
                 <div>
