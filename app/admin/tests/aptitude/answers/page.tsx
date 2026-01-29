@@ -131,7 +131,7 @@ export default function AptitudeAnswerManagement() {
                                 <div className="ml-4 flex flex-col items-center">
                                     <span className="text-[10px] uppercase text-slate-400 font-bold mb-1">정답</span>
                                     <div className="w-10 h-10 flex items-center justify-center border border-slate-300 rounded bg-slate-50 text-black font-bold text-lg">
-                                        {q.correct_answer}
+                                        {typeof q.correct_answer === 'number' ? q.correct_answer + 1 : '-'}
                                     </div>
                                 </div>
                             </div>
