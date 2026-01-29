@@ -159,24 +159,21 @@ export default function HomePageContent({ initialPosts, uClassContents }: { init
                     </Link>
 
                     {/* Card 2: Aptitude */}
-                    {/* Card 2: Aptitude (Disabled) */}
-                    <div className="group relative bg-slate-50 border border-slate-100 rounded-[2rem] p-10 overflow-hidden flex flex-col justify-start gap-24 cursor-not-allowed opacity-80">
-                        <div className="absolute top-6 right-6 bg-slate-200 text-slate-500 text-xs font-bold px-3 py-1 rounded-full">
-                            오픈 준비 중
-                        </div>
+                    <Link href="/candidate/aptitude" className="group relative bg-white border border-slate-100 rounded-[2rem] p-10 shadow-sm hover:shadow-xl hover:shadow-primary/20 transition-all duration-500 overflow-hidden flex flex-col justify-start gap-24 cursor-pointer">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity translate-x-1/2 -translate-y-1/2"></div>
 
-                        <div className="w-16 h-16 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-400 mb-6">
+                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-300">
                             <BrainCircuit size={32} strokeWidth={2.5} />
                         </div>
 
                         <div>
-                            <h3 className="text-2xl font-bold mb-3 text-slate-400">적성검사:<br />숨겨진 능력 깨우기</h3>
-                            <p className="text-slate-400 leading-relaxed font-medium">
+                            <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">적성검사:<br />숨겨진 능력 깨우기</h3>
+                            <p className="text-slate-500 leading-relaxed font-medium">
                                 당신의 잠재력을 믿으세요.<br />
                                 낯선 문제 앞에서도 당황하지 않도록 준비해드릴게요.
                             </p>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Card 3: Interview */}
                     {/* Card 3: Interview (Disabled) */}
