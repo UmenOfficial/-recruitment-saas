@@ -8,25 +8,28 @@ import { useRouter } from "next/navigation";
 interface TestEntryGateProps {
     status: 'EXPIRED' | 'INTERRUPTED' | 'VALID';
     testResultId: string;
+    testId: string;
     children: React.ReactNode;
 }
 
-export default function TestEntryGate({ status, testResultId, children }: TestEntryGateProps) {
+export default function TestEntryGate({ status, testResultId, testId, children }: TestEntryGateProps) {
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     const handleAction = async (mode: 'full' | 'time_only' | 'recover') => {
+        console.log(`[TestEntryGate] handleAction clicked: ${mode}, testResultId=${testResultId}, testId=${testId}`);
         if (!confirm("선택한 방식으로 검사를 시작하시겠습니까?")) return;
 
         setIsLoading(true);
         try {
-            const result = await resetTestSession(testResultId, mode);
+            const result = await resetTestSession(testResultId, testId, mode);
             if (!result.success) {
                 alert("초기화 중 오류가 발생했습니다. 관리자에게 문의하세요.");
                 console.error(result.error);
                 setIsLoading(false);
                 return;
             }
+            console.log("[TestEntryGate] Reset success. Reloading...");
             // Force reload to reflect changes
             window.location.reload();
         } catch (error) {

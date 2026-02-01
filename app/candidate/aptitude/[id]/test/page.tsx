@@ -168,7 +168,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
     }));
 
     return (
-        <TestEntryGate status={status} testResultId={testResult.id}>
+        <TestEntryGate status={status} testResultId={testResult.id} testId={id}>
             <TestInterface
                 testResultId={testResult.id}
                 questions={formattedQuestions}
