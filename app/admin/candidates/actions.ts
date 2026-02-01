@@ -13,7 +13,6 @@ export async function fetchCandidatesList() {
         const { data: users, error: userError } = await supabase
             .from('users')
             .select('*')
-            .not('email', 'ilike', 'guest_%')
             .order('created_at', { ascending: false });
 
         if (userError) throw userError;
@@ -31,6 +30,9 @@ export async function fetchCandidatesList() {
                 tests ( title, type )
             `)
             .in('user_id', userIds)
+            .neq('test_id', '28b79003-0f40-4447-922d-bfeab706eff9') // Exclude Sample Test
+            // Also exclude by title just in case ID differs in environments
+            .not('tests.title', 'ilike', '%Sample%')
             .order('completed_at', { ascending: false });
 
         if (resError) throw resError;

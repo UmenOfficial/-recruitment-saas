@@ -132,19 +132,19 @@ export default function AptitudeTestBuilder({ params }: PageProps) {
         try {
             const fileExt = file.name.split('.').pop();
             const fileName = `${id}-${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            const filePath = `covers/${fileName}`;
 
             // 1. Upload to Storage (Client-side is authorized for storage mostly, but if strict RLS, might need backend proxy? 
             // Assuming storage policies are separate. Keep storage call client side for now.)
             const { error: uploadError } = await supabase.storage
-                .from('test-images')
-                .upload(filePath, file);
+                .from('questions')
+                .upload(filePath, file, { upsert: true });
 
             if (uploadError) throw uploadError;
 
             // 2. Get Public URL
             const { data: { publicUrl } } = supabase.storage
-                .from('test-images')
+                .from('questions')
                 .getPublicUrl(filePath);
 
             // 3. Update DB via Action
