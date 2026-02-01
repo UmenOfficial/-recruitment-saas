@@ -64,7 +64,8 @@ export async function submitAptitudeTest(testResultId: string) {
     redirect('/candidate/dashboard');
 }
 
-export async function resetTestSession(testResultId: string, mode: 'full' | 'time_only' | 'recover') {
+export async function resetTestSession(testResultId: string, testId: string, mode: 'full' | 'time_only' | 'recover') {
+    console.log(`[resetTestSession] Starting reset for result=${testResultId}, test=${testId}, mode=${mode}`);
     // Use Service Role to bypass RLS for critical state reset
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -141,16 +142,8 @@ export async function resetTestSession(testResultId: string, mode: 'full' | 'tim
         return { success: false, error };
     }
 
-    // Find test_id to revalidate the correct page
-    const { data: tr } = await supabase
-        .from('test_results')
-        .select('test_id')
-        .eq('id', testResultId)
-        .single();
-
-    if (tr) {
-        revalidatePath(`/candidate/aptitude/${tr.test_id}/test`);
-    }
+    console.log(`[resetTestSession] Reset successful. Revalidating path for testId=${testId}`);
+    revalidatePath(`/candidate/aptitude/${testId}/test`);
 
     return { success: true };
 }
