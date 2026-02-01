@@ -9,7 +9,7 @@ export async function saveAptitudeAnswer(testResultId: string, questionId: strin
     const supabase = await createServerSupabaseClient();
 
     // 1. Get current answers log
-    const { data: currentResult } = await supabase
+    const { data: currentResult } = await (supabase as any)
         .from('test_results')
         .select('answers_log')
         .eq('id', testResultId)
@@ -28,7 +28,7 @@ export async function saveAptitudeAnswer(testResultId: string, questionId: strin
     };
 
     // 3. Save to DB
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('test_results')
         .update({
             answers_log: updatedAnswers,
@@ -48,7 +48,7 @@ export async function saveAptitudeAnswer(testResultId: string, questionId: strin
 export async function submitAptitudeTest(testResultId: string) {
     const supabase = await createServerSupabaseClient();
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
         .from('test_results')
         .update({
             completed_at: new Date().toISOString()

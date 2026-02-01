@@ -9,6 +9,7 @@ interface Question {
     content: string;
     options: any; // Json type from DB
     order_index: number;
+    image_url?: string | null;
 }
 
 interface TestInterfaceProps {

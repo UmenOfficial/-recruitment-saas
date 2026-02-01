@@ -139,7 +139,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
     }
 
     // 6. Fetch Questions
-    const { data: testQuestions, error: qError } = await supabase
+    const { data: testQuestions, error: qError } = await (supabase as any)
         .from('test_questions')
         .select(`
             order_index,
@@ -159,7 +159,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
     }
 
     // Format questions
-    const formattedQuestions = testQuestions.map(tq => ({
+    const formattedQuestions = testQuestions.map((tq: any) => ({
         id: tq.questions!.id,
         content: tq.questions!.content,
         options: tq.questions!.options,
