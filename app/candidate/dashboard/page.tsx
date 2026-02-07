@@ -100,23 +100,30 @@ export default async function CandidateDashboard() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
                     {groupedResults.map((group: any) => {
-                        const topPercent = calculatePercentile(group.bestScore);
+                        const isAptitude = group.test.type === 'APTITUDE';
+                        // For Aptitude, we use absolute score (max 100). For Personality, we might use T-score or Percentile.
+                        // Assuming Personality uses T-score logic from before.
+
+                        const topPercent = !isAptitude ? calculatePercentile(group.bestScore) : null;
+                        const reportLink = isAptitude
+                            ? `/candidate/aptitude/report/${group.bestResultId}`
+                            : `/candidate/dashboard/${group.bestResultId}`;
 
                         return (
                             <Link
                                 key={group.test.id}
-                                href={`/candidate/dashboard/${group.bestResultId}`}
-                                className="group relative bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col h-fit"
+                                href={reportLink}
+                                className="group relative bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col h-full"
                             >
                                 {/* Accent Glow (Centered & deeper) */}
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-400 rounded-full blur-[60px] opacity-0 group-hover:opacity-30 transition-all duration-700 pointer-events-none"></div>
+                                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 ${isAptitude ? 'bg-purple-400' : 'bg-blue-400'} rounded-full blur-[60px] opacity-0 group-hover:opacity-30 transition-all duration-700 pointer-events-none`}></div>
 
                                 {/* Top Section: Icon & Title */}
                                 <div className="flex items-start gap-4 mb-8">
-                                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors shrink-0">
+                                    <div className={`w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 ${isAptitude ? 'group-hover:bg-purple-50 group-hover:text-purple-500' : 'group-hover:bg-blue-50 group-hover:text-blue-500'} transition-colors shrink-0`}>
                                         <Award size={24} />
                                     </div>
-                                    <h3 className="text-2xl font-black tracking-tight text-slate-800 group-hover:text-blue-900 transition-colors leading-tight line-clamp-2 min-h-[3.5rem] flex items-center">
+                                    <h3 className={`text-2xl font-black tracking-tight text-slate-800 ${isAptitude ? 'group-hover:text-purple-900' : 'group-hover:text-blue-900'} transition-colors leading-tight line-clamp-3 min-h-[6rem] flex items-center`}>
                                         {group.test.title}
                                     </h3>
                                 </div>
@@ -125,16 +132,24 @@ export default async function CandidateDashboard() {
                                 <div className="mb-6">
                                     <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-2">BEST SCORE</div>
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-baseline text-[64px] font-black text-slate-900 tracking-tighter group-hover:text-blue-600 transition-colors leading-none">
-                                            {group.bestScore.toFixed(1).split('.')[0]}
-                                            <span className="text-[32px] tracking-normal">.{group.bestScore.toFixed(1).split('.')[1]}</span>
+                                        <div className={`flex items-baseline text-[64px] font-black text-slate-900 tracking-tighter ${isAptitude ? 'group-hover:text-purple-600' : 'group-hover:text-blue-600'} transition-colors leading-none`}>
+                                            {isAptitude ? Math.round(group.bestScore) : group.bestScore.toFixed(1).split('.')[0]}
+                                            {!isAptitude && <span className="text-[32px] tracking-normal">.{group.bestScore.toFixed(1).split('.')[1]}</span>}
+                                            {isAptitude && <span className="text-[24px] text-slate-400 font-medium ml-1">/100</span>}
                                         </div>
 
                                         <div className="flex flex-col gap-2">
-                                            <div className="flex items-center justify-center gap-1.5 w-28 h-7 bg-blue-50 text-blue-600 rounded-xl text-[11px] font-bold">
-                                                <TrendingUp size={12} />
-                                                상위 {topPercent}%
-                                            </div>
+                                            {!isAptitude ? (
+                                                <div className="flex items-center justify-center gap-1.5 w-28 h-7 bg-blue-50 text-blue-600 rounded-xl text-[11px] font-bold">
+                                                    <TrendingUp size={12} />
+                                                    상위 {topPercent}%
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-center gap-1.5 w-28 h-7 bg-purple-50 text-purple-600 rounded-xl text-[11px] font-bold">
+                                                    <Award size={12} />
+                                                    절대평가
+                                                </div>
+                                            )}
                                             <div className="flex items-center justify-center gap-1.5 w-28 h-7 bg-slate-50 text-slate-500 rounded-xl text-[11px] font-bold">
                                                 <RefreshCw size={12} />
                                                 {group.attemptCount}회 응시
@@ -149,7 +164,7 @@ export default async function CandidateDashboard() {
                                         <Calendar size={14} />
                                         최근 {new Date(group.latestDate).toLocaleDateString('ko-KR')}
                                     </div>
-                                    <ChevronRight size={18} className="text-blue-600 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300" />
+                                    <ChevronRight size={18} className={`${isAptitude ? 'text-purple-600' : 'text-blue-600'} opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300`} />
                                 </div>
                             </Link>
                         );
@@ -168,8 +183,8 @@ export default async function CandidateDashboard() {
                             <p className="text-xs text-slate-400 mt-1">나의 또 다른 가능성을 확인하세요.</p>
                         </div>
                     </Link>
-                </div>
+                </div >
             )}
-        </div>
+        </div >
     );
 }

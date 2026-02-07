@@ -64,9 +64,11 @@ export default function PracticeInterface({ id, problem }: PracticeInterfaceProp
 
                 {answer !== null && (
                     <div className="mt-8 animate-in fade-in slide-in-from-bottom-4">
-                        <div className="bg-slate-50 p-4 rounded-xl text-slate-600 text-sm mb-6">
-                            💡 <strong>정답 및 해설:</strong> {['①', '②', '③', '④', '⑤'][problem.correctIndex]} {problem.options[problem.correctIndex]}<br />
-                            <div className="text-xs text-slate-500 mt-2 block leading-relaxed">
+                        <div className="bg-slate-50 p-6 rounded-xl text-slate-700 text-base mb-6">
+                            <div className="mb-2">
+                                💡 <strong className="font-bold text-slate-900">정답 및 해설:</strong> {['①', '②', '③', '④', '⑤'][problem.correctIndex]} {problem.options[problem.correctIndex]}
+                            </div>
+                            <div className="text-base text-slate-600 leading-relaxed">
                                 {problem.solution_logic}
                             </div>
                         </div>

@@ -20,7 +20,7 @@ export function UTalkLounge({ posts }: { posts: any[] }) {
             <div className="flex justify-between items-end mb-8 px-2">
                 <div>
                     <h2 className="text-3xl font-black text-slate-800 mb-2">U-Talk Lounge</h2>
-                    <p className="text-slate-500 font-medium">취업, 고민, 그리고 우리들의 이야기</p>
+                    <p className="text-slate-500 font-medium break-keep">취업, 고민, 그리고 우리들의 이야기</p>
                 </div>
                 <Link href="/community" className="text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
                     전체보기 <ArrowRight size={16} />
@@ -31,7 +31,7 @@ export function UTalkLounge({ posts }: { posts: any[] }) {
                 <div className="bg-slate-50 border border-slate-100 rounded-[2rem] p-12 text-center">
                     <MessageSquare size={48} className="mx-auto text-slate-300 mb-4" />
                     <h3 className="text-lg font-bold text-slate-800 mb-2">아직 등록된 이야기가 없어요</h3>
-                    <p className="text-slate-500 mb-6">첫 번째 이야기의 주인공이 되어보세요!</p>
+                    <p className="text-slate-500 mb-6 break-keep">첫 번째 이야기의 주인공이 되어보세요!</p>
                     <Link href="/community/write" className="inline-block px-6 py-2 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors">
                         이야기 시작하기
                     </Link>
@@ -130,7 +130,7 @@ export default function HomePageContent({ initialPosts, uClassContents }: { init
                         Find the <span className="text-primary drop-shadow-sm">&apos;U&apos;</span><br />
                         in Unique.
                     </h1>
-                    <p className="mt-6 text-xl text-slate-500 font-medium max-w-2xl">
+                    <p className="mt-6 text-xl text-slate-500 font-medium max-w-2xl break-keep">
                         평범함 속에서 당신만의 특별함을 찾으세요.
                     </p>
 
@@ -151,7 +151,7 @@ export default function HomePageContent({ initialPosts, uClassContents }: { init
 
                         <div>
                             <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">인성검사:<br />나를 만나는 시간</h3>
-                            <p className="text-slate-500 leading-relaxed font-medium">
+                            <p className="text-slate-500 leading-relaxed font-medium break-keep">
                                 당신다운 솔직함에 가장 큰 무기입니다.<br />
                                 흔들리지 않게 중심을 잡아드릴게요.
                             </p>
@@ -168,7 +168,7 @@ export default function HomePageContent({ initialPosts, uClassContents }: { init
 
                         <div>
                             <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">적성검사:<br />숨겨진 능력 깨우기</h3>
-                            <p className="text-slate-500 leading-relaxed font-medium">
+                            <p className="text-slate-500 leading-relaxed font-medium break-keep">
                                 당신의 잠재력을 믿으세요.<br />
                                 낯선 문제 앞에서도 당황하지 않도록 준비해드릴게요.
                             </p>
@@ -188,7 +188,7 @@ export default function HomePageContent({ initialPosts, uClassContents }: { init
 
                         <div>
                             <h3 className="text-2xl font-bold mb-3 text-slate-400">면접:<br />경험의 재발견</h3>
-                            <p className="text-slate-400 leading-relaxed font-medium">
+                            <p className="text-slate-400 leading-relaxed font-medium break-keep">
                                 사소하다고 생각했던 당신의 모든 경험이<br />
                                 정답이 됩니다.
                             </p>

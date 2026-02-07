@@ -100,7 +100,7 @@ export async function fetchAptitudeTestDetailAction(id: string) {
         // 2. Fetch All Aptitude Questions
         const { data: allQuestions, error: qError } = await supabase
             .from('questions')
-            .select('*')
+            .select('*, test_questions(tests(title))')
             .eq('type', 'APTITUDE')
             .order('created_at', { ascending: false });
         if (qError) throw qError;
@@ -122,7 +122,10 @@ export async function fetchAptitudeTestDetailAction(id: string) {
             success: true,
             data: {
                 test: testData,
-                allQuestions,
+                allQuestions: allQuestions?.map((q: any) => ({
+                    ...q,
+                    used_in: q.test_questions?.map((tq: any) => tq.tests?.title).filter(Boolean) || []
+                })) || [],
                 addedQuestions
             }
         };

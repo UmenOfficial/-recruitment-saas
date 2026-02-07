@@ -6,17 +6,48 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function saveAptitudeAnswer(testResultId: string, questionId: string, answer: number) {
-    const supabase = await createServerSupabaseClient();
+    const supabaseUser = await createServerSupabaseClient();
+    const { data: { user } } = await supabaseUser.auth.getUser();
 
-    // 1. Get current answers log
-    const { data: currentResult } = await supabase
+    if (!user) throw new Error("Unauthorized");
+
+    // Use Service Role to bypass RLS
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // 1. Get current answers log and verify ownership
+    const { data: currentResult } = await supabaseAdmin
         .from('test_results')
-        .select('answers_log')
+        .select('answers_log, user_id')
         .eq('id', testResultId)
         .single();
 
     if (!currentResult) {
         throw new Error("Test result not found");
+    }
+
+    // Verify ownership
+    if (currentResult.user_id !== user.id) {
+        // Fallback: check via application (in case user_id is not populated on test_results)
+        const { data: appResult } = await supabaseAdmin
+            .from('test_results')
+            .select('applications!inner(user_id)')
+            .eq('id', testResultId)
+            .single();
+
+        if (!appResult) {
+            throw new Error("Unauthorized access to test result");
+        }
+
+        const apps = appResult.applications as any;
+        const appUserId = Array.isArray(apps) ? apps[0]?.user_id : apps?.user_id;
+
+        if (appUserId !== user.id) {
+            throw new Error("Unauthorized access to test result");
+        }
     }
 
     const currentAnswers = (currentResult.answers_log as Record<string, number>) || {};
@@ -28,12 +59,11 @@ export async function saveAptitudeAnswer(testResultId: string, questionId: strin
     };
 
     // 3. Save to DB
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
         .from('test_results')
         .update({
             answers_log: updatedAnswers,
             updated_at: new Date().toISOString()
-            // optional: update violation_log if needed in future
         })
         .eq('id', testResultId);
 
@@ -46,22 +76,82 @@ export async function saveAptitudeAnswer(testResultId: string, questionId: strin
 }
 
 export async function submitAptitudeTest(testResultId: string) {
-    const supabase = await createServerSupabaseClient();
+    const supabaseUser = await createServerSupabaseClient();
+    const { data: { user } } = await supabaseUser.auth.getUser();
 
-    const { error } = await supabase
+    if (!user) throw new Error("Unauthorized");
+
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // Verify ownership first AND get answers log
+    const { data: target } = await supabaseAdmin
+        .from('test_results')
+        .select('user_id, applications!inner(user_id), answers_log')
+        .eq('id', testResultId)
+        .single();
+
+    if (!target) {
+        console.error("Submit failed: Test result not found", testResultId);
+        throw new Error("Test result not found");
+    }
+
+    const apps = target.applications as any;
+    const ownerId = target.user_id || (Array.isArray(apps) ? apps[0]?.user_id : apps?.user_id);
+
+    if (ownerId !== user.id) {
+        console.error(`Submit failed: Unauthorized. owner=${ownerId}, user=${user.id}`);
+        throw new Error("Unauthorized");
+    }
+
+    // --- Scoring Logic ---
+    const answers = (target.answers_log as Record<string, number>) || {};
+    const questionIds = Object.keys(answers);
+    let totalScore = 0;
+
+    if (questionIds.length > 0) {
+        // Fetch correct answers
+        const { data: questions, error: qError } = await supabaseAdmin
+            .from('questions')
+            .select('id, correct_answer')
+            .in('id', questionIds);
+
+        if (qError) {
+            console.error("Failed to fetch questions for scoring:", qError);
+            // We could throw, or log and continue with 0 score, but strict is better for now
+            throw new Error("Failed to calculate score");
+        }
+
+        if (questions) {
+            questionIds.forEach(qId => {
+                const userAnswer = answers[qId];
+                const question = questions.find(q => q.id === qId);
+                // Simple equality check (assuming numbers stored as numbers)
+                // Using loose quality or string conversion to be safe
+                if (question && String(question.correct_answer) === String(userAnswer)) {
+                    totalScore += 10;
+                }
+            });
+        }
+    }
+
+    const { error: updateError } = await supabaseAdmin
         .from('test_results')
         .update({
-            completed_at: new Date().toISOString()
+            completed_at: new Date().toISOString(),
+            total_score: totalScore
         })
         .eq('id', testResultId);
 
-    if (error) {
-        console.error("Failed to submit test:", error);
+    if (updateError) {
+        console.error("Failed to submit test:", updateError);
         throw new Error("Failed to submit test");
     }
 
-    // Redirect to dashboard
-    redirect('/candidate/dashboard');
+    return { success: true };
 }
 
 export async function resetTestSession(testResultId: string, testId: string, mode: 'full' | 'time_only' | 'recover') {
@@ -87,6 +177,7 @@ export async function resetTestSession(testResultId: string, testId: string, mod
             .update({
                 started_at: now,
                 updated_at: now,
+                completed_at: null, // Force clear completion status
                 answers_log: {},
                 violation_count: 0
             })
@@ -98,7 +189,8 @@ export async function resetTestSession(testResultId: string, testId: string, mod
             .from('test_results')
             .update({
                 started_at: now,
-                updated_at: now
+                updated_at: now,
+                completed_at: null // Force clear completion status (e.g. for expired tests)
             })
             .eq('id', testResultId);
         error = err;

@@ -53,10 +53,33 @@ async function checkTestData() {
         console.error("Error fetching questions:", qError);
     } else {
         console.log(`\nFound ${questions.length} questions for Test ID: ${testId}`);
-        questions.forEach(q => {
-            const question = q.questions as any;
-            console.log(`- [${q.order_index}] ${question?.content?.substring(0, 50)}...`);
-        });
+        // Check 1 question with ALL fields
+        const { data: sampleQ } = await supabase
+            .from('questions')
+            .select('*')
+            .eq('id', (questions[0].questions as any).id)
+            .single();
+
+        console.log("\nSample Question Full Data:");
+        console.log(JSON.stringify(sampleQ, null, 2));
+    }
+
+    // 3. FORCE RESET for Debugging
+    console.log("\nRe-opening test session...");
+    const { error: updateError } = await supabase
+        .from('test_results')
+        .update({
+            completed_at: null,
+            started_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            answers_log: {} // clear answers too? maybe
+        })
+        .eq('id', latestResult.id);
+
+    if (updateError) {
+        console.error("Failed to reset:", updateError);
+    } else {
+        console.log("Successfully reset completed_at to null. User can now access the test.");
     }
 }
 

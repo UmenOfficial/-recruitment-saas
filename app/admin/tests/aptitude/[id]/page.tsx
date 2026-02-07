@@ -291,6 +291,15 @@ export default function AptitudeTestBuilder({ params }: PageProps) {
                                 <div className="flex-1">
                                     <div className="text-xs font-bold text-blue-600 mb-0.5">{q.category}</div>
                                     <div className="text-sm text-slate-800 line-clamp-2 font-medium">{q.content}</div>
+                                    {q.used_in && q.used_in.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-1">
+                                            {q.used_in.map((title: string, idx: number) => (
+                                                <span key={idx} className="px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] rounded">
+                                                    {title}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

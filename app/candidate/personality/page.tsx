@@ -78,7 +78,7 @@ export default async function PersonalityTestsPage() {
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <h3 className="font-bold text-lg mb-1 group-hover:text-orange-600 transition-colors">{test.title}</h3>
-                                            <p className="text-sm text-slate-500 whitespace-pre-line">{test.description || '설명이 없습니다.'}</p>
+                                            <p className="text-sm text-slate-500 whitespace-pre-line break-keep">{test.description || '설명이 없습니다.'}</p>
                                         </div>
                                         <span className="bg-orange-50 text-orange-600 text-xs px-2 py-1 rounded-md font-medium shrink-0 ml-2">Active</span>
                                     </div>

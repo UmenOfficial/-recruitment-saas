@@ -6,7 +6,7 @@ import { resetTestSession } from "../../actions";
 import { useRouter } from "next/navigation";
 
 interface TestEntryGateProps {
-    status: 'EXPIRED' | 'INTERRUPTED' | 'VALID';
+    status: 'EXPIRED' | 'INTERRUPTED' | 'VALID' | 'COMPLETED';
     testResultId: string;
     testId: string;
     children: React.ReactNode;
@@ -29,9 +29,15 @@ export default function TestEntryGate({ status, testResultId, testId, children }
                 setIsLoading(false);
                 return;
             }
-            console.log("[TestEntryGate] Reset success. Reloading...");
-            // Force reload to reflect changes
-            window.location.reload();
+            console.log("[TestEntryGate] Reset success. Redirecting...");
+
+            if (mode === 'full') {
+                // If restarting from scratch, go to practice page
+                router.push(`/candidate/aptitude/${testId}/practice`);
+            } else {
+                // Otherwise reload to attempt test again
+                window.location.reload();
+            }
         } catch (error) {
             console.error(error);
             alert("처리 중 오류가 발생했습니다.");
@@ -54,12 +60,18 @@ export default function TestEntryGate({ status, testResultId, testId, children }
 
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                        {status === 'EXPIRED' ? '검사 시간이 종료되었습니다.' : '검사가 중단되었습니다.'}
+                        {status === 'EXPIRED'
+                            ? '검사 시간이 종료되었습니다.'
+                            : status === 'COMPLETED'
+                                ? '검사 완료'
+                                : '검사가 중단되었습니다.'}
                     </h2>
                     <p className="text-slate-500 leading-relaxed word-keep">
                         {status === 'EXPIRED'
                             ? '제한 시간이 만료되었으나, 아직 제출하지 않으셨습니다. 아래 옵션 중 하나를 선택해 주세요.'
-                            : '이전에 진행하던 검사 기록이 있습니다. 이어서 진행하시겠습니까?'}
+                            : status === 'COMPLETED'
+                                ? '이미 제출된 검사입니다. 다시 시작하시겠습니까?'
+                                : '이전에 진행하던 검사 기록이 있습니다. 이어서 진행하시겠습니까?'}
                     </p>
                 </div>
 
@@ -80,7 +92,10 @@ export default function TestEntryGate({ status, testResultId, testId, children }
                     </button>
 
                     {/* Scenario Specific Option */}
-                    {status === 'EXPIRED' ? (
+                    {status === 'COMPLETED' ? (
+                        /* Completed only has restart option (already rendered above), so we show nothing here OR we can hide options if needed */
+                        null
+                    ) : status === 'EXPIRED' ? (
                         <button
                             onClick={() => handleAction('time_only')}
                             disabled={isLoading}

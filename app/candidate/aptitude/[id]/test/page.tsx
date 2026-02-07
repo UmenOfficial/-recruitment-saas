@@ -29,11 +29,15 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
     // 2. Get Test Info (Time Limit)
     const { data: test } = await supabaseAdmin
         .from('tests')
-        .select('time_limit')
+        .select('time_limit, title')
         .eq('id', id)
         .single();
 
     if (!test) return <div>Test not found</div>;
+
+    // ...
+
+
 
     // 3. Get or Create Application ID
     let application = null;
@@ -84,6 +88,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
             .from('test_results')
             .insert({
                 application_id: application.id,
+                user_id: user.id,
                 test_id: id,
                 started_at: new Date().toISOString(),
                 time_limit_minutes: test.time_limit,
@@ -107,11 +112,6 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
         testResult = newResult;
     }
 
-    // Check if already completed
-    if (testResult.completed_at) {
-        redirect('/candidate/dashboard');
-    }
-
     // 5. Calculate Status
     const now = new Date().getTime();
     const start = new Date(testResult.started_at!).getTime();
@@ -123,9 +123,11 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
     const hasAnswers = Object.keys(answers).length > 0;
 
     // Check for interruption (if inactive for more than 1 minute)
-    let status: 'EXPIRED' | 'INTERRUPTED' | 'VALID' = 'VALID';
+    let status: 'EXPIRED' | 'INTERRUPTED' | 'VALID' | 'COMPLETED' = 'VALID';
 
-    if (isExpired) {
+    if (testResult.completed_at) {
+        status = 'COMPLETED';
+    } else if (isExpired) {
         status = 'EXPIRED';
     } else if (hasAnswers) {
         // If updated_at is old (e.g. > 1 min ago), consider it an interruption
@@ -146,6 +148,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
             questions (
                 id,
                 content,
+                description,
                 options,
                 image_url
             )
@@ -162,6 +165,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
     const formattedQuestions = testQuestions.map(tq => ({
         id: tq.questions!.id,
         content: tq.questions!.content,
+        description: tq.questions!.description,
         options: tq.questions!.options,
         image_url: tq.questions!.image_url,
         order_index: tq.order_index
@@ -171,6 +175,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
         <TestEntryGate status={status} testResultId={testResult.id} testId={id}>
             <TestInterface
                 testResultId={testResult.id}
+                testTitle={test.title}
                 questions={formattedQuestions}
                 initialAnswers={answers}
                 timeLimitMinutes={test.time_limit || 60}
