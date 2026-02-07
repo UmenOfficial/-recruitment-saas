@@ -100,7 +100,7 @@ export default async function CandidateDashboard() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
                     {groupedResults.map((group: any) => {
-                        const isAptitude = group.test.type === 'APTITUDE';
+                        const isAptitude = group.test.type?.toUpperCase() === 'APTITUDE';
                         // For Aptitude, we use absolute score (max 100). For Personality, we might use T-score or Percentile.
                         // Assuming Personality uses T-score logic from before.
 

@@ -63,7 +63,8 @@ export async function saveAptitudeAnswer(testResultId: string, questionId: strin
         .from('test_results')
         .update({
             answers_log: updatedAnswers,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            user_id: user.id // Self-healing: Ensure user_id is set
         })
         .eq('id', testResultId);
 
@@ -142,7 +143,8 @@ export async function submitAptitudeTest(testResultId: string) {
         .from('test_results')
         .update({
             completed_at: new Date().toISOString(),
-            total_score: totalScore
+            total_score: totalScore,
+            user_id: user.id // Self-healing: Ensure user_id is set
         })
         .eq('id', testResultId);
 
