@@ -101,8 +101,13 @@ export function calculatePersonalityScores(
             cRaw += (scaleTMapped[name] || 0);
         });
 
-        // Comp T-Score: Use Competency Norms
-        const norm = competencyNorms.find(n => n.category_name === comp.name);
+        // Comp T-Score: Use Competency Norms (Handle 'Comp_' prefix flexibly)
+        const cleanCompName = comp.name.replace('Comp_', '');
+        const norm = competencyNorms.find(n => 
+            n.category_name === comp.name || 
+            n.category_name === cleanCompName ||
+            `Comp_${n.category_name}` === comp.name
+        );
         const mean = norm?.mean_value || 0;
         const std = norm?.std_dev_value || 1;
         const cT = calculateTScore(cRaw, mean, std);

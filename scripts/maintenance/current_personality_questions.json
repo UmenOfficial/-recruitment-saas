@@ -1,0 +1,1298 @@
+[
+  {
+    "id": "763b4227-aa00-4a2d-b8bb-27520d5a0e9c",
+    "category": "개방성",
+    "content": "변화하는 최신 트렌드를 내 업무에 도입한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "27a6d1db-fc5d-4489-88cd-4a2f48ed0fbe",
+    "category": "개방성",
+    "content": "변화가 필요한 상황에서도 기존 방식을 고수한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "c1afc799-74d6-4957-9d29-37ec304aede5",
+    "category": "개방성",
+    "content": "기존 방식에 얽매이지 않고 업무를 처리한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "fe07393d-6911-49ac-94a7-a5b4c4c0229a",
+    "category": "개방성",
+    "content": "새로운 방식을 적용하여 업무를 처리한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f613426c-5ad2-47f6-9829-80c19373fb57",
+    "category": "개방성",
+    "content": "주변 환경의 변화를 거부감 없이 받아들인다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "397aa776-3124-4a7c-b5c6-66984ce04cf3",
+    "category": "개선성",
+    "content": "원활한 업무 처리를 위해 미흡한 점을 보완한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "25e8b982-b09f-4848-9308-13b5879b9359",
+    "category": "개선성",
+    "content": "업무 효율을 높이는 구체적인 방안을 실행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "72e3c95d-6ea7-4f05-a3bd-ddc18c6aaa45",
+    "category": "개선성",
+    "content": "기존보다 더 나은 성과를 위해 업무 방식을 최적화한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "eaf7a7ef-a926-491d-b229-ea56d9e04e30",
+    "category": "개선성",
+    "content": "불편한 점이 있어도 개선하지 않고 그대로 둔다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "e84fbd66-1c1f-4cda-9cde-6d4e0f09a751",
+    "category": "개선성",
+    "content": "업무 수행 중 발생하는 비효율적인 요소를 개선한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "7b8f8415-2d35-4772-905b-07caaa954eb1",
+    "category": "객관성",
+    "content": "객관적인 시각으로 특정 현상을 바라본다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "cf64e0e4-e468-4cdd-8af1-6646bc411d8d",
+    "category": "객관성",
+    "content": "의사결정 시 객관적 사실보다 주관적 견해를 우선한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "decf9d7f-38da-4985-b652-0992cc4ceae9",
+    "category": "객관성",
+    "content": "객관적 근거를 바탕으로 의견을 제안한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "becf9fe2-a4a1-4351-bf64-a9ff86efa600",
+    "category": "객관성",
+    "content": "어떤 상황에서도 객관적인 태도를 유지한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "250b6e12-e8ec-4723-8d95-aa58de48cca5",
+    "category": "객관성",
+    "content": "의사결정 시 주관적인 판단을 배제한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "4dea0157-0e56-4e17-a7c5-fc73381ce867",
+    "category": "거시성",
+    "content": "업무 시작 전 전체적인 과정을 먼저 이해한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "60fdcaf3-f1ad-4957-82e0-eed342516eca",
+    "category": "거시성",
+    "content": "업무 수행 시 전체적인 맥락을 먼저 파악한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "6bf2805e-6014-4470-9b84-5296fbe7bbdb",
+    "category": "거시성",
+    "content": "현상을 이해할 때 단편적인 사례만으로 전체를 판단한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "b7aefa32-ab0e-43b2-b4b4-134a68ed8277",
+    "category": "거시성",
+    "content": "큰 그림보다 세부적인 사항들을 먼저 살펴본다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "528c0b5b-bda3-4844-a25b-f65e1ae875ae",
+    "category": "거시성",
+    "content": "문서의 전체적인 흐름을 먼저 파악한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "20031fe9-6aea-46dc-a689-eeaad96e382d",
+    "category": "거짓말",
+    "content": "밤을 새어도 피곤함을 느낀 적이 없다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ef509cdf-bc86-4365-8cbf-0acf8fdd5fc7",
+    "category": "거짓말",
+    "content": "다른 사람에게 화를 낸 적이 한 번도 없다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "42da22bf-788c-43ef-8f7f-68fc1bf91a17",
+    "category": "거짓말",
+    "content": "일상 생활에서 외로움을 느껴본 적이 없다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "0136e253-d7a2-42ce-9b2a-38c8ee5b07d6",
+    "category": "거짓말",
+    "content": "내 주변의 모든 사람과 친하게 지낸다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "971b577d-067c-45df-a7ad-d4c68411660e",
+    "category": "거짓말",
+    "content": "살아오면서 다른 사람의 도움을 받은 적이 없다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e7c7a7ac-7171-46b1-ae99-1d85bd8f6ae0",
+    "category": "겸손성",
+    "content": "불필요한 상황에서 나의 성과를 내세우지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e540fd11-14bb-40f2-95a3-177a936ab266",
+    "category": "겸손성",
+    "content": "작은 성과라도 타인에게 알리려 한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "0157ed5e-a5d8-4473-b055-3859d052ca7c",
+    "category": "겸손성",
+    "content": "상황에 관계없이 나의 성과를 드러낸다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "1b756c40-85fa-4484-938a-99427b3b5517",
+    "category": "겸손성",
+    "content": "협업 과정에서 나타난 타인의 성과를 존중한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c6c1093d-b8ca-4b49-8310-3332a4fdbba4",
+    "category": "겸손성",
+    "content": "나의 능력에 대해 과대평가하지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "71999871-6446-493a-a011-1c561dedb95a",
+    "category": "경계선 성격장애",
+    "content": "극단적인 감정 기복으로 인해 스스로 당황한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "9e56d814-1d2b-4e13-a820-d15336425d9b",
+    "category": "경계선 성격장애",
+    "content": "대인관계 속에서도 깊은 공허함을 느낀다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c4478d27-b0aa-46ee-92cb-03e2a825dae6",
+    "category": "경계선 성격장애",
+    "content": "정서 불안으로 인해 원만한 대인관계를 맺지 못한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "dcf62484-5c1c-4faa-8983-301158b9bfbb",
+    "category": "경계선 성격장애",
+    "content": "안정적인 정서 상태를 유지하지 못한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "984bade2-d579-407c-a260-dde9eeedaa14",
+    "category": "경계선 성격장애",
+    "content": "시시각각 변하는 감정을 스스로 통제하지 못한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "a83c865d-b0fc-4c72-b364-4838fff9a27c",
+    "category": "경쟁성",
+    "content": "주변 사람들보다 앞서 목표를 달성한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "7cf8317b-1c89-434a-a7d2-1900600fef8e",
+    "category": "경쟁성",
+    "content": "경쟁 과정을 통해 자신의 역량을 성장시킨다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5f52f321-c2d9-43fc-bcf9-4717a783da5a",
+    "category": "경쟁성",
+    "content": "남들과 경쟁해야 하는 상황을 피한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "90db877f-ae27-4af8-a895-82442895fdd7",
+    "category": "경쟁성",
+    "content": "경쟁자가 있을 때 업무 집중력이 더 높아진다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "cb45311d-3a83-4cf2-af42-038d03a8bc5d",
+    "category": "경쟁성",
+    "content": "상대방과 경쟁하는 상황에서 더 높은 성과를 낸다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "7675a92c-61b9-4836-8ce8-0303f25ccdf4",
+    "category": "계획성",
+    "content": "내일 해야 할 일에 대한 계획을 미리 수립한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f2d06db5-13b3-4e43-a842-69deb53b88b7",
+    "category": "계획성",
+    "content": "계획을 세우지 않고 즉흥적으로 업무를 처리한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "34c1d06c-a17b-4ddf-9733-839c795667c1",
+    "category": "계획성",
+    "content": "본격적인 행동에 앞서 필요한 절차를 준비한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ff2f71ec-652b-4ee5-9110-3ead7436b5f2",
+    "category": "계획성",
+    "content": "업무 실행에 앞서 구체적인 계획을 수립한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "233a859f-b1f2-4355-a18f-fca332e7df23",
+    "category": "계획성",
+    "content": "구체적인 계획을 수립하여 업무 오류를 줄인다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "419b4446-3189-46e0-b277-5d4912193d0f",
+    "category": "공감성",
+    "content": "사람들의 행동 이면에 있는 의도를 파악한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "433ee03e-25a9-4130-9a97-9f89b79aa8e2",
+    "category": "공감성",
+    "content": "타인의 어려움이나 고민에 관심을 두지 않는다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "6abcf3cf-68af-4fed-a994-b794867f9138",
+    "category": "공감성",
+    "content": "타인이 느끼는 감정을 고려하지 않는다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "901e988e-224f-4e51-906d-3e96aa1a6b03",
+    "category": "공감성",
+    "content": "상대방이 느끼는 감정의 원인을 깊이 이해한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "7fb538c0-0d34-4a51-86de-ca25587c0029",
+    "category": "공감성",
+    "content": "상대방의 감정 변화에 관심을 갖는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "1f43c4e4-fde1-4bba-a9a6-2ddd6567557c",
+    "category": "공격성",
+    "content": "대화 중 섞어 쓰는 욕설은 문제가 되지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "13291ab1-8d04-4c1c-a97d-8dd920555187",
+    "category": "공격성",
+    "content": "화가 나면 언행이 거칠어진다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "40ea8505-7f76-45e4-8e03-0913c385605e",
+    "category": "공격성",
+    "content": "화를 참지 못해 타인에게 해를 입힌다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f09de6ef-8873-4c35-b8a4-cbaf7d4cc14c",
+    "category": "공격성",
+    "content": "화를 참지 못해 후회할 행동을 한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "9ed259d3-af98-41bf-9ef2-6481792e3cc4",
+    "category": "공격성",
+    "content": "마음에 들지 않는 상대방을 괴롭힌다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "fd3f8da2-df1e-4899-8619-356ec2c16f0a",
+    "category": "관계성",
+    "content": "다양한 사람들을 만날 수 있는 모임에 참석한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c6b73330-40ea-46a3-91de-ff6d98d0c860",
+    "category": "관계성",
+    "content": "타인과 좋은 관계를 맺기 위해 먼저 다가간다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "36d2932e-36cb-49b4-b20e-2072dce12dd2",
+    "category": "관계성",
+    "content": "성격이 다른 사람과도 거부감 없이 어울린다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c8fc92ae-64c9-414c-8722-cd9ac4376258",
+    "category": "관계성",
+    "content": "주변 사람들과의 대화를 통해 에너지를 얻는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "63da821e-cf02-4185-8f49-484cdab1eeb3",
+    "category": "관계성",
+    "content": "주변 사람들과 원만한 관계를 유지한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "2e35370f-0a4e-467c-83bf-dcbba53c6fa0",
+    "category": "긍정성",
+    "content": "일상적인 상황에서도 긍정적인 면을 발견한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8f05a2a3-06eb-4fdf-99e1-da8e8b5c981c",
+    "category": "긍정성",
+    "content": "새로운 업무 방침을 긍정적인 변화로 받아들인다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8726b6fd-257d-4ce2-bd49-8f9d21ba0359",
+    "category": "긍정성",
+    "content": "어려움이 있어도 희망을 잃지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "85a2fdef-fc02-4ed4-9394-4c1606624136",
+    "category": "긍정성",
+    "content": "힘든 상황이 닥쳐도 좋은 결과가 있을 것이라 확신한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "03beb4a3-0322-4070-8a0b-cc352b31d2d2",
+    "category": "긍정성",
+    "content": "좋은 성과가 날 것을 확신하며 업무를 수행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5eb5ec92-2b26-49d8-bc61-daac09ba033d",
+    "category": "도전성",
+    "content": "실패 가능성이 있는 어려운 목표는 처음부터 배제한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "35e5d129-53db-4023-aeab-92b840103442",
+    "category": "도전성",
+    "content": "현재 수준보다 높은 목표를 추구한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "6f58f0f0-d252-4aae-b8eb-8efff7ea69e3",
+    "category": "도전성",
+    "content": "목표를 달성하면 연이어 더 높은 목표를 수립한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8e4acc23-4bb8-4004-929e-99b792bc4c02",
+    "category": "도전성",
+    "content": "달성하기 어려운 목표일수록 몰입한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ff16dd94-076e-47b4-81a6-5699c458e1f4",
+    "category": "도전성",
+    "content": "실패 가능성이 높아도 도전을 멈추지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "669f9dfe-7f33-4bd4-b437-b8aeb324be12",
+    "category": "몰입성",
+    "content": "소속된 조직에서 부여받은 역할에 몰입한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5d2cd46f-e238-4e1c-87d8-7c27ddf8af8d",
+    "category": "몰입성",
+    "content": "주어진 일에 집중하여 업무를 수행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d26c7227-103e-44a4-ba32-1c5ddb13f25f",
+    "category": "몰입성",
+    "content": "과제가 종료될 때까지 집중력을 유지한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c9bcaaa1-e905-4f61-ac2d-ee7ae0eae875",
+    "category": "몰입성",
+    "content": "일과 시간 동안 주어진 과제에 몰두한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "663c8eea-5122-479b-86c8-2bc47b6592f4",
+    "category": "몰입성",
+    "content": "주변 환경과 상관없이 해야 할 일에 몰두한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "b29859da-d3e4-4349-816d-262c02db2688",
+    "category": "민감성",
+    "content": "상대방이 겪는 사소한 불편함에도 관심을 갖는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e39bc868-cd93-4483-ab9f-3617bb0c1493",
+    "category": "민감성",
+    "content": "상대방의 요구사항을 굳이 확인하려 하지 않는다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "290df6e3-bbf3-4ac6-a4e4-2d01ab26341f",
+    "category": "민감성",
+    "content": "상대방의 요청사항을 미루지 않고 해결해 준다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "59ab702b-f4e0-4b7c-b564-9ebe87b2117d",
+    "category": "민감성",
+    "content": "대화를 통해 상대방이 원하는 바를 파악한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e307ce04-90fa-4791-b0c7-59f3257efc51",
+    "category": "민감성",
+    "content": "상대방이 무엇을 요구하는지 파악할 수 있다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "24f24918-a98c-4cde-bb07-ff20b4ffb565",
+    "category": "반사회적 성격장애",
+    "content": "여러 사람이 손해를 입어도 나의 목표 달성이 우선이다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "9f92eeb7-08ef-4b9a-9495-f7bebc261ac7",
+    "category": "반사회적 성격장애",
+    "content": "사회적 규범을 지켜야 할 의무감을 느끼지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "df395bea-f7ef-4f12-a2d3-e65d684b8317",
+    "category": "반사회적 성격장애",
+    "content": "타인을 위해 내가 손해 보는 일은 하지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "cde37dd6-b6e7-4ccb-8d40-bd229a1129be",
+    "category": "반사회적 성격장애",
+    "content": "목표 달성을 위해서라면 가벼운 규범은 어긴다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "9d124351-1f60-4d5a-8ab0-78cc0c45cec8",
+    "category": "반사회적 성격장애",
+    "content": "나의 이익을 위해서라면 거짓말도 서슴지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "78ca9a0c-9176-48e4-b21c-4903f77db126",
+    "category": "분석성",
+    "content": "문제 상황이 발생하면 그 원인을 파악한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "1bd618e6-5676-40d7-a20f-f8fe351409bc",
+    "category": "분석성",
+    "content": "정보들 간의 관계나 요점을 파악하지 못한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "91b5c8fa-4bcf-4432-9d14-08093dddcaae",
+    "category": "분석성",
+    "content": "복잡한 현상을 이해하기 쉽게 단순화하여 설명한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c0f59dc0-008f-4053-ba4d-f42596dbee21",
+    "category": "분석성",
+    "content": "복잡한 내용을 분석하여 요점을 도출한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "279eb3a0-c6c4-4894-a883-fcacb779fb81",
+    "category": "분석성",
+    "content": "방대한 정보 속에서 핵심 내용을 파악한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "70453e74-5626-4f91-8e5a-b6b3607c671b",
+    "category": "불안/우울장애",
+    "content": "하루를 살아갈 힘이 전혀 없다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f6cfd0f7-1e79-44fc-8897-dea990fe0a54",
+    "category": "불안/우울장애",
+    "content": "걱정거리 때문에 밤에 잠을 이루지 못한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "9d369c03-411e-4dc5-b2b2-88794698a093",
+    "category": "불안/우울장애",
+    "content": "근심이 많아 업무 중에 안절부절못한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c5c74964-eeeb-4654-9ba9-748884ececec",
+    "category": "불안/우울장애",
+    "content": "지나온 삶이 무의미하다고 생각한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "b06593f9-448d-425d-a4de-feccb1c7cdc3",
+    "category": "불안/우울장애",
+    "content": "주변 사람들 중 내가 제일 불행하다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "24324319-1463-475a-ad04-e7d335a346a8",
+    "category": "비판성",
+    "content": "결정된 방안이 적절한지 다시 검토한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f53dab78-ccfe-4cf2-85d9-f7753975efa7",
+    "category": "비판성",
+    "content": "해결 방안의 장단점을 분석한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "aa2a1dbb-f606-4984-a712-90850ad6b1f0",
+    "category": "비판성",
+    "content": "상대방 주장의 사실 여부를 검토한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "84df4c29-37a4-428c-82d9-6cecfaaafc69",
+    "category": "비판성",
+    "content": "의사결정 과정에서 문제점이 없는지 확인한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f49cd1ae-6398-439c-9af6-48b8d18a20a2",
+    "category": "비판성",
+    "content": "타인 의견의 사실 관계를 굳이 확인하지 않는다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "7d741404-98d0-4557-b606-c0b00b6ee146",
+    "category": "설득성",
+    "content": "논리적인 근거를 제시하여 상대방을 설득한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "862b6943-75a4-4e92-a516-4bee8757e90c",
+    "category": "설득성",
+    "content": "상대방을 설득할 자신이 없어 내 의견을 접는다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "a983d85c-a6dc-478e-ad84-46c03006500b",
+    "category": "설득성",
+    "content": "나의 의견을 상대방에게 명확하게 전달한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c398455a-14d4-4cea-9b1f-237955b5eaa1",
+    "category": "설득성",
+    "content": "타인을 설득하여 나의 의견을 따르게 한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "65b90c4d-1d12-45eb-bd74-7af007b26b09",
+    "category": "설득성",
+    "content": "다른 사람의 주장에 대해 논리적으로 반박한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e9eafa3a-3119-4587-8b49-5a433945dbd7",
+    "category": "세밀성",
+    "content": "문서의 오탈자나 양식 오류를 끝까지 검토한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "57fc20c1-b995-4f0a-b6fb-9759b860af82",
+    "category": "세밀성",
+    "content": "업무상 실수가 반복되지 않도록 재차 점검한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5d384c91-37cb-4a7f-a7ad-f000fcfc7c23",
+    "category": "세밀성",
+    "content": "결과물을 제출하기 전 오류를 반복해서 확인한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "beae206d-acd8-4e3c-aed2-6a7d93719bac",
+    "category": "세밀성",
+    "content": "실수를 줄이기 위한 나만의 노하우를 가지고 있다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "536b507c-3235-4f05-be0b-f77d32af6664",
+    "category": "세밀성",
+    "content": "사소한 오류는 수정하지 않고 그대로 둔다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "08d7b6af-2df4-4d00-9971-1ecb64e8609f",
+    "category": "수용성",
+    "content": "나의 소신과 상반되는 입장도 편견 없이 받아들인다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f1da0d01-f30e-4e5e-8cee-93492423afcd",
+    "category": "수용성",
+    "content": "나와 다른 입장을 가진 사람들의 의견도 귀 기울여 듣는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "222debc9-aeb3-4a2a-b273-96dfccd428c6",
+    "category": "수용성",
+    "content": "타인의 입장을 있는 그대로 이해하고 받아들인다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "419e16b6-d8b5-496a-8cf9-b2acddb59dc3",
+    "category": "수용성",
+    "content": "다양한 사람들의 가치관을 존중한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e90a161d-82d3-43d7-a4fd-aa578eaabcb9",
+    "category": "수용성",
+    "content": "상대방의 주장에 대해 선입견을 가지지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "1d43854a-7418-48e1-afae-f461c7f70796",
+    "category": "신중성",
+    "content": "행동하기 전 발생 가능한 문제를 검토한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f281b27d-b210-48f1-9c75-c1a87862fb48",
+    "category": "신중성",
+    "content": "업무 시작 전 제반 사항을 빠짐없이 파악한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5740d1c9-92ec-4368-bf8e-f8a29f3b00f5",
+    "category": "신중성",
+    "content": "실행 과정에서 발생할 수 있는 어려움을 미리 예측한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d74177a2-4bcc-4651-8c68-d31a9defce42",
+    "category": "신중성",
+    "content": "대안을 제안하기 전 장단점을 분석한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "c17a2da6-6a15-468a-b5ee-c4ead800de19",
+    "category": "신중성",
+    "content": "검토가 끝나지 않은 사안은 의사결정을 보류한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "0a7de500-a242-411c-a9dd-cc9faffe56a5",
+    "category": "실행성",
+    "content": "일처리 과정에 어려움이 예상되더라도 실행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "4feb2bab-3bb4-4810-8f72-b0b5201e0846",
+    "category": "실행성",
+    "content": "한번 결정된 사항은 번복하지 않고 행동으로 옮긴다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "66a87b8e-87c0-411c-a4a8-6120f17fe401",
+    "category": "실행성",
+    "content": "마음을 먹었으면 주저하지 않고 행동으로 옮긴다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "2d562bcb-37fa-4cb9-b021-84f250df405c",
+    "category": "실행성",
+    "content": "계획이 수립되면 바로 실행에 옮긴다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "60db4de8-fd03-40b3-9b9e-c646a0dc3843",
+    "category": "실행성",
+    "content": "의사결정된 사항은 주저 없이 실행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d2ca2f36-f5f9-484a-b611-2e58aec4f540",
+    "category": "윤리성",
+    "content": "사회 구성원으로서 지켜야 할 도리를 다한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "053496e5-1743-4914-92e6-46a45238fffc",
+    "category": "윤리성",
+    "content": "양심에 어긋나는 행동은 하지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "2b67c9d3-b737-46e4-94a8-a4c29aecb768",
+    "category": "윤리성",
+    "content": "일처리 과정에서 도덕적 가치를 준수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "9ff07cc6-f06d-42ca-85a3-0034a6ac482b",
+    "category": "윤리성",
+    "content": "조직 구성원으로서의 행동 규범을 준수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8f52320f-9d58-4080-b298-d0e63163124e",
+    "category": "윤리성",
+    "content": "양심에 거리끼는 일은 처음부터 하지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5a1614da-45f1-44d9-a13a-da6048842ed5",
+    "category": "의존성 성격장애",
+    "content": "중요한 의사결정을 스스로 내리지 못한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "bbe18c75-042f-4b31-99db-78dc7e4147fc",
+    "category": "의존성 성격장애",
+    "content": "스스로 결정하기보다 지시받은 일 수행을 선호한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "93a63e90-c97b-413e-a662-71fa1d6bc901",
+    "category": "의존성 성격장애",
+    "content": "타인의 도움 없이는 일을 제대로 수행하지 못한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d20d036f-8104-43b4-805c-0a8bd5ff49c9",
+    "category": "의존성 성격장애",
+    "content": "중요한 결정은 타인의 의견에 전적으로 의존한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d6d78961-61fc-4404-8924-930c68eeb4d8",
+    "category": "의존성 성격장애",
+    "content": "나의 능력은 타인에 비해 보잘것없다고 여긴다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d4c8b955-f4d1-425d-9bd7-87c3c983ecb5",
+    "category": "인내성",
+    "content": "일하는 과정에서 어려움이 발생해도 끝까지 이겨낸다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "985718c4-9eb8-4423-8825-5977bfb744a7",
+    "category": "인내성",
+    "content": "목적을 이루기 위해 어떠한 난관도 극복한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "6cd9d366-23b0-44a4-9eb6-7c757acd7693",
+    "category": "인내성",
+    "content": "난관이 있어도 목표를 달성할 때까지 멈추지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e48ebcdc-a392-4392-8233-bc602501ef85",
+    "category": "인내성",
+    "content": "예상치 못한 어려움이 닥치면 업무를 중단한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "bfe6bd67-4c0e-4768-8725-24a77950de5c",
+    "category": "인내성",
+    "content": "힘든 상황이 닥쳐도 맡은 업무를 포기하지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "9273ce2c-64a1-4b82-ab6f-d5c2902a7be4",
+    "category": "일관성",
+    "content": "일관된 입장과 태도로 업무를 수행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f90f928d-64d8-4167-9bc6-b251a9fa082b",
+    "category": "일관성",
+    "content": "업무 처리 과정에서 일관된 견해를 유지한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e4b19c6a-9231-47fb-9459-b3118b5a6179",
+    "category": "일관성",
+    "content": "내 견해가 있어도 상황에 따라 말을 바꾼다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "81081cf6-a3fb-49b9-8609-95a88238d4dc",
+    "category": "일관성",
+    "content": "주변 환경과 상관없이 나의 신념대로 결정한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "4d338208-7210-433c-8a17-ee5f2567019b",
+    "category": "일관성",
+    "content": "상황이 바뀌어도 나의 의사결정 사항은 변하지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "3e38177d-5a2f-4592-ad95-7d6c0c76c1f3",
+    "category": "자기신뢰도검증",
+    "content": "성실하게 문항에 응답하고 있지 않다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "28b6cb81-b09a-4051-a452-6ee5b6e8923a",
+    "category": "자기신뢰도검증",
+    "content": "문항을 제대로 읽지 않고 응답한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f7343db9-ff83-4b9e-bf04-b72183be832d",
+    "category": "자기신뢰도검증",
+    "content": "솔직한 나의 모습으로 응답하지 않는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ca64a412-8b7a-4dce-9cc5-8911fc84c6e9",
+    "category": "자기신뢰도검증",
+    "content": "문항을 건성으로 읽고 응답한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5e0d744c-3176-4476-bb08-449c5bc765c0",
+    "category": "자기신뢰도검증",
+    "content": "문항에 거짓으로 응답한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "85ef1d90-6dad-43b3-a7dd-2e46ac35d47d",
+    "category": "자기신뢰도검증",
+    "content": "꾸며진 나의 모습을 상상하며 응답한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "0946c115-e717-4374-83ae-1a55acb46afb",
+    "category": "자발성",
+    "content": "누군가 시키지 않아도 필요한 일을 찾아서 처리한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "0f4d5159-1cbb-4caf-9a79-abb0aea1c22e",
+    "category": "자발성",
+    "content": "내가 해야 할 일은 스스로 알아서 진행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "83652590-dd0c-4f96-a5db-40a9392a02c9",
+    "category": "자발성",
+    "content": "상대방이 업무를 요청하거나 지시하면 그 때 일을 시작한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "1360c4ab-5cef-4d8e-8c9d-197a0cd9d3df",
+    "category": "자발성",
+    "content": "해야 할 일이 생기면 주저 없이 업무에 착수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5c72b240-2c85-4f90-84fb-aa60f9d83cae",
+    "category": "자발성",
+    "content": "처리할 업무가 보이면 미루지 않고 먼저 수행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "1fc0f5e4-dc26-439a-8da4-b2ad9b63317d",
+    "category": "적응성",
+    "content": "낯선 환경에서도 당황하지 않고 대처한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "634f72f3-4387-4712-86b5-15f89166eef4",
+    "category": "적응성",
+    "content": "급변하는 환경에 적응하지 못해 혼란스러워한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "a8214a6c-2bda-45e5-be84-4ecaf0e0b42d",
+    "category": "적응성",
+    "content": "상황이 변하면 그에 맞춰 일하는 방식을 바꾼다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "a98312ba-4887-4c60-a853-2602f537f028",
+    "category": "적응성",
+    "content": "주변 환경이 변하면 적응하는 데 어려움을 겪는다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "5fc9c055-d194-4f5c-97a3-87c798e69798",
+    "category": "적응성",
+    "content": "변화하는 주변 환경에 맞춰 유연하게 대응한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "cc560a49-17a2-43d1-83bc-d9ecd13f3d50",
+    "category": "전문성",
+    "content": "직무 전문성을 높이기 위해 꾸준히 노력한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "95159ae8-1b57-4d52-9d3e-119c7b94c54f",
+    "category": "전문성",
+    "content": "전문가로 불릴만한 나만의 분야가 있다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8d22458d-8e65-4b1b-87cf-2edda4d984e1",
+    "category": "전문성",
+    "content": "전공 분야에서 남들보다 우수한 역량을 발휘한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "7e73cd6b-9a3c-4dda-b74b-6621ae3b2732",
+    "category": "전문성",
+    "content": "특정 분야에 대해 깊이 있는 지식을 보유하고 있다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "fe9de421-fa2a-4ef4-a2e9-a19140910976",
+    "category": "전문성",
+    "content": "전문성을 높이기 위해 지속적으로 지식을 습득한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "73bc155d-4766-4f6f-9e67-fa1d1e520bec",
+    "category": "조현형 성격장애",
+    "content": "설명할 수 없는 힘이 나의 정신을 지배한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "851d8a9d-3c9b-4b91-8609-9cb22910ef8d",
+    "category": "조현형 성격장애",
+    "content": "내 의지와 상관없이 몸이 저절로 움직인다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5ed96517-1c2f-4fa9-8671-29c3bc8b7535",
+    "category": "조현형 성격장애",
+    "content": "다른 사람이 볼 수 없는 장면이 나에게만 보인다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "dae38d60-1ac7-4ee5-b62f-83920b0d8321",
+    "category": "조현형 성격장애",
+    "content": "알 수 없는 존재가 나를 통제한다고 믿는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "fe55d18b-edfa-45de-b925-fe2ba3589535",
+    "category": "조현형 성격장애",
+    "content": "이해할 수 없는 생각들로 머릿속이 혼란스럽다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "7b075a84-4dc2-44b4-a769-10dc9f3985ea",
+    "category": "주도성",
+    "content": "팀의 선두에서 팀원들을 이끄는 역할을 맡는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f514e9be-26ba-4bc4-8500-5c51a2db3c40",
+    "category": "주도성",
+    "content": "사소한 일에 직접 나서기보다 리더의 지시에 따른다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "a945866d-c856-451d-8e2d-95a7b9363435",
+    "category": "주도성",
+    "content": "여러 사람과 함께하는 업무를 주도적으로 진행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "887274dd-6a78-4749-84c8-7a91bcbefc33",
+    "category": "주도성",
+    "content": "팀원들을 이끌며 업무를 진행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d3cd20ee-a9b8-4260-85f5-524df6469751",
+    "category": "주도성",
+    "content": "팀 과제 수행 시 주도적으로 팀을 이끈다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d65441b5-7b37-4aa4-85fb-8a845a17cd5a",
+    "category": "준수성",
+    "content": "상호간의 약속된 사항을 준수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "00a86b8d-cc65-42de-ab5f-ebad9e1009f1",
+    "category": "준수성",
+    "content": "소속된 집단의 규칙을 준수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "f54985ac-c3f0-4a8e-9d2f-cefdbf25759a",
+    "category": "준수성",
+    "content": "팀에서 정해 놓은 규칙에 따라 행동한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "30f3d5bd-322e-4da3-9ace-b0a79f07fe16",
+    "category": "준수성",
+    "content": "어떤 상황에서도 정해진 원칙을 지킨다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5b76904c-8929-4847-9826-0ffb5e817084",
+    "category": "준수성",
+    "content": "어려운 상황에서도 정해진 규칙은 지킨다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "b458c4d9-e2a0-42c7-99bd-0319b0a56638",
+    "category": "지시불이행",
+    "content": "해당 문항에서는 '그렇다'를 선택하십시오.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "53390338-332e-40bf-b49a-b6055a2dfb80",
+    "category": "지시불이행",
+    "content": "이 문항에서는 '전혀 그렇지 않다'를 선택하십시오.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "3878ab81-3622-4598-baeb-f22b81365fea",
+    "category": "지시불이행",
+    "content": "현재 읽고 있는 문항에는 '그렇지 않다'를 선택하십시오.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "dce2bdde-faf0-4f52-80c9-5cef2e6e9db2",
+    "category": "지시불이행",
+    "content": "이 문항에서는 '보통이다'을 선택하십시오.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d01f2ac3-cade-401d-9b4a-73e3241aefd9",
+    "category": "지시불이행",
+    "content": "이 문항에서는 '매우 그렇다'를 선택하십시오.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "20c5cabd-c9d0-48a8-9623-dc02b4039d41",
+    "category": "창의성",
+    "content": "기존보다 더 나은 새로운 방안을 강구한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "81fc17f0-6691-4e25-8378-fa44bec625b1",
+    "category": "창의성",
+    "content": "타인과 차별화된 독창적인 해결 방안을 마련한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "80088d0a-6434-45c5-a1cd-547c4eb80f4b",
+    "category": "창의성",
+    "content": "기존 방식과 차별화된 새로운 경로를 모색한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "db02cc8d-ff21-4dc3-86f6-a8afef1bda72",
+    "category": "창의성",
+    "content": "전례 없는 새로운 것을 만들어내는 시도를 한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ad61b222-b378-43d3-b2fc-62aed6340f8e",
+    "category": "창의성",
+    "content": "독창적이고 효과적인 아이디어를 제안한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "713592b8-d0fc-4225-8343-e5f81f64b3ae",
+    "category": "책임성",
+    "content": "작은 일이라도 맡은 업무는 끝까지 완수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ccbcba1d-45b0-472b-8af8-516e0a7d8f57",
+    "category": "책임성",
+    "content": "맡은 일은 무슨 일이 있어도 끝까지 완수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "5173a7fc-bd8d-432e-b08c-92d51238d90c",
+    "category": "책임성",
+    "content": "정해진 기한 내에 맡은 업무를 마무리한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8f362c69-9daf-4969-8632-865e4b225e02",
+    "category": "책임성",
+    "content": "나의 결과물에 대해서 끝까지 책임을 진다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "6028795c-7196-405a-9f56-47c11e79aa83",
+    "category": "책임성",
+    "content": "주어진 임무는 반드시 수행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "371688b3-f938-4b8a-b40b-30a460596e0a",
+    "category": "편집성 성격장애",
+    "content": "다른 사람들이 나를 해칠 수 있다고 생각한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "0617f8f7-a81c-4dfc-9b65-eeb2b123b2fb",
+    "category": "편집성 성격장애",
+    "content": "친한 사람들도 언젠가 나를 배신할 것이라 의심한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "888cc12b-b316-489f-9c30-2d792c8c28bc",
+    "category": "편집성 성격장애",
+    "content": "남들과 달리 나만 부당하게 피해를 본다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8522c654-897e-4ad6-a376-7d8ccb1c2e45",
+    "category": "편집성 성격장애",
+    "content": "주변 사람들이 이유 없이 나를 미워한다고 믿는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "d9ed101b-7971-4d9b-9b39-7a11ec83d291",
+    "category": "편집성 성격장애",
+    "content": "사람들의 호의에는 불순한 의도가 담겨 있다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "2c2725d2-dba0-49c1-a1fc-35f4e5b1fe44",
+    "category": "헌신성",
+    "content": "내 역할이 아니어도 팀을 위해 필요한 일이라면 맡아서 진행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "00072f98-26ae-42d0-877f-1673f7998be5",
+    "category": "헌신성",
+    "content": "팀의 성공을 위해서라면 나의 희생을 감수한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "209b93db-0f84-47fa-b6a5-0ea1dd3cd938",
+    "category": "헌신성",
+    "content": "팀을 위해서라면 개인 시간을 할애한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "e3afcbab-7594-4b71-9fe5-59abbae78d42",
+    "category": "헌신성",
+    "content": "개인의 불편함을 감수하고 팀을 위해 일한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "8a240cdc-bc4b-4f4f-8338-a04059d5a9bc",
+    "category": "헌신성",
+    "content": "팀을 위해서라면 추가적인 업무도 수행한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ac7b0aeb-0362-4e97-a7d6-183443f680b7",
+    "category": "협동성",
+    "content": "팀원들이 서로 힘을 낼 수 있도록 돕는다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "42fb703f-a7cf-4ff3-b197-5d718f3e3d69",
+    "category": "협동성",
+    "content": "팀 성과를 높이기 위해 나만의 노하우를 동료와 공유한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "b661e967-4a93-4416-9091-75163038e120",
+    "category": "협동성",
+    "content": "팀 과제 수행 시 팀워크를 최우선으로 한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "b90a3fa3-02ff-44cf-9e55-3f7c4d667aa1",
+    "category": "협동성",
+    "content": "팀보다는 개인의 목표를 우선시한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "5573317d-1132-4e78-82ac-732c8e3223d9",
+    "category": "협동성",
+    "content": "팀원들 간의 원활한 상호작용을 이끌어낸다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "4b0b7176-81c6-4e23-a725-79048c010a49",
+    "category": "회복성",
+    "content": "스트레스 상황에서도 평정심을 유지한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "ca46b9b0-7f61-4788-86d0-71c9391ad9c8",
+    "category": "회복성",
+    "content": "스트레스 상황이 닥치면 평정심을 잃고 동요한다.",
+    "is_reverse_scored": true
+  },
+  {
+    "id": "5757c554-010a-4ef5-afa9-73182253f5a4",
+    "category": "회복성",
+    "content": "심리적인 긴장 상태를 이겨낸다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "b66be784-6903-4168-b962-7f06c5d25c1c",
+    "category": "회복성",
+    "content": "압박감이 큰 상황에서도 침착함을 유지한다.",
+    "is_reverse_scored": false
+  },
+  {
+    "id": "64cda75c-64d4-47d2-bf7a-46320c885996",
+    "category": "회복성",
+    "content": "힘든 상황이 닥쳐도 이를 극복해낸다.",
+    "is_reverse_scored": false
+  }
+]

@@ -39,6 +39,10 @@
 *   **My Report**:
     *   **Deep Dive Report**: 인성검사 결과에 따른 역량(Competency) 상세 분석 리포트 제공.
     *   **Norms Engine**: 글로벌/로컬 규준(Norms)에 기반한 T-Score 산출 로직 적용.
+    *   **Aptitude Deep Dive (적성검사 리포트)**:
+        *   **Absolute Scoring**: 100점 만점 기준의 절대평가 점수 산출 및 문항별 정오답(Correct/Wrong) 상세 분석.
+        *   **Interactive Review**: 문항별 해설(Explanation) 및 전체 정답률(Global Correct Rate) 통계 제공.
+        *   **Wrong Answer Note (Beta)**: 오답 문항 집중 복습을 위한 오답노트 기능 연동 예정.
 
 ### 5. 시스템 및 보안 (System & Security)
 *   **Authentication**: Supabase Auth 연동 (Email/Password, OAuth).

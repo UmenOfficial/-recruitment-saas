@@ -229,8 +229,9 @@ export async function submitTestAction(resultId: string, testId: string, answers
         // 1. Fetch Data in Parallel (Optimization)
         // 병렬 처리를 통해 데이터 조회 시간을 단축합니다. (규준, 역량 정의, 문항 정보)
         console.time('FetchData');
+        const GLOBAL_TEST_ID = '8afa34fb-6300-4c5e-bc48-bbdb74c717d8';
         const [normsResult, competencyResult, questionsResult] = await Promise.all([
-            supabase.from('test_norms').select('*').eq('test_id', testId),
+            supabase.from('test_norms').select('*').in('test_id', [testId, GLOBAL_TEST_ID]),
             supabase.from('competencies').select('id, name, competency_scales(scale_name)').eq('test_id', testId),
             supabase.from('test_questions').select('questions(*)').eq('test_id', testId)
         ]);

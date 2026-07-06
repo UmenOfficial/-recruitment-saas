@@ -190,7 +190,7 @@ export default function ReportContent({
         .slice(0, 4);
 
     const lowScores = processedScales
-        .filter(s => s.score <= 40)
+        .filter(s => s.score < 50)
         .sort((a, b) => a.score - b.score)
         .slice(0, 4);
 
@@ -321,7 +321,7 @@ export default function ReportContent({
                                                 <ul className="space-y-2">
                                                     {narr.weaknesses.length > 0 ? narr.weaknesses.map((w, i) => (
                                                         <li key={i} className="text-[13px] text-slate-600 leading-snug">• {w}</li>
-                                                    )) : <li className="text-[13px] text-slate-400 italic">데이터 부족</li>}
+                                                    )) : <li className="text-[13px] text-slate-400 italic">보완해야 할 부분이 없습니다</li>}
                                                 </ul>
                                             </div>
                                         </div>

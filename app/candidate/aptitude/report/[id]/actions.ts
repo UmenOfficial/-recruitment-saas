@@ -40,21 +40,66 @@ export async function getAptitudeReportData(resultId: string) {
 
         if (qError) throw qError;
 
-        // 3. Calculate Stats (Global Correct Rate) - Mock for now or Query?
-        // Querying global stats for each question might be heavy. 
-        // Let's do a simple count query for each question if possible, or skip for MVP v1 and add later.
-        // For now, attaching questions. We will implement global stats via a separate aggregate query if needed.
+        // 3. Calculate Stats (Global Correct Rate & Average Score)
+        // Fetch all results for this test to calculate norms
+        const { data: aggData, error: aggError } = await supabase
+            .from('test_results')
+            .select('total_score, answers_log')
+            .eq('test_id', result.test_id)
+            .not('total_score', 'is', null);
 
-        // Let's try to get global stats: Count total answers vs correct answers for these questions
-        // This is expensive on large datasets. We'll add a placeholder or simple calculation if efficient.
-        // For MVP, we will return 0% or random? No, let's try to fetch real stats if possible.
-        // Actually, let's keep it simple: Just return the data for the report first.
+        let avgScore = 0;
+        const qStats: Record<string, { total: number, correct: number }> = {};
+        const totalCount = aggData?.length || 0;
+
+        if (aggData && totalCount > 0) {
+            const totalScoreSum = aggData.reduce((acc, r: any) => acc + (r.total_score || 0), 0);
+            avgScore = totalScoreSum / totalCount;
+
+            // Map correct answers for quick lookup
+            const correctAnswers = (questions as any[])?.reduce((acc, q) => {
+                acc[q.id] = String(q.correct_answer);
+                return acc;
+            }, {} as Record<string, string>) || {};
+
+            // Aggregate question stats
+            aggData.forEach((r: any) => {
+                const log = r.answers_log as Record<string, any>;
+                if (!log) return;
+
+                Object.entries(log).forEach(([qId, ans]) => {
+                    // Only track stats for questions that exist in current fetching context
+                    if (correctAnswers[qId] !== undefined) {
+                        if (!qStats[qId]) qStats[qId] = { total: 0, correct: 0 };
+
+                        qStats[qId].total++;
+                        // Compare as strings to be safe
+                        if (String(ans) === correctAnswers[qId]) {
+                            qStats[qId].correct++;
+                        }
+                    }
+                });
+            });
+        }
+
+        // Attach stats to questions
+        const questionsWithStats = (questions as any[])?.map(q => ({
+            ...q,
+            stats: {
+                rate: qStats[q.id] ? Math.round((qStats[q.id].correct / qStats[q.id].total) * 100) : 0,
+                total: qStats[q.id]?.total || 0
+            }
+        }));
 
         return {
             success: true,
             data: {
                 result,
-                questions: questions || []
+                questions: questionsWithStats || [],
+                metrics: {
+                    avgScore: Math.round(avgScore * 10) / 10, // Round to 1 decimal
+                    totalCount
+                }
             }
         };
 

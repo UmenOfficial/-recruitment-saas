@@ -162,7 +162,7 @@ export default async function AptitudeTestPage({ params }: { params: Promise<{ i
     }
 
     // Format questions
-    const formattedQuestions = testQuestions.map(tq => ({
+    const formattedQuestions = (testQuestions as any[]).map(tq => ({
         id: tq.questions!.id,
         content: tq.questions!.content,
         description: tq.questions!.description,

@@ -13,7 +13,7 @@ export default async function Home() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <HomePageContent initialPosts={posts.slice(0, 3)} uClassContents={uClassContents} />
-      <SampleTestModal />
+      {/* <SampleTestModal /> */}
     </Suspense>
   );
 }
